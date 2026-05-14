@@ -15,6 +15,8 @@ interface IPlant {
   species?: string
   /** Cultivar or variety name */
   variety?: string
+  /** References the associated garden's ID */
+  gardenId: string
   /** ISO 8601 creation timestamp */
   createdAt: string
   /** ISO 8601 last-updated timestamp */

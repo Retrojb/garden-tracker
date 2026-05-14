@@ -2356,6 +2356,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@expo/schema-utils@npm:^55.0.4":
+  version: 55.0.4
+  resolution: "@expo/schema-utils@npm:55.0.4"
+  checksum: 10c0/3ad7fa4a69cb72d37ace9d6ec37d85956aaf539fa956e6219465929454f7ad76def86def24e7bbb63ef68377b77e68a865c39f9b514938e9059ba00fcb4bb1d0
+  languageName: node
+  linkType: hard
+
 "@expo/sdk-runtime-versions@npm:^1.0.0":
   version: 1.0.0
   resolution: "@expo/sdk-runtime-versions@npm:1.0.0"
@@ -3488,6 +3495,26 @@ __metadata:
   peerDependencies:
     react: ">= 18.2.0"
   checksum: 10c0/8101c7736f5fac647c6e2e9320379b06aa65865a654977733de394c1b8150378f5f8fba09a579d082ad11974d764f6944a21ae1d961dc720f766cebe6f8f5a50
+  languageName: node
+  linkType: hard
+
+"@react-navigation/drawer@npm:^7.10.1":
+  version: 7.10.1
+  resolution: "@react-navigation/drawer@npm:7.10.1"
+  dependencies:
+    "@react-navigation/elements": "npm:^2.9.17"
+    color: "npm:^4.2.3"
+    react-native-drawer-layout: "npm:^4.2.4"
+    use-latest-callback: "npm:^0.2.4"
+  peerDependencies:
+    "@react-navigation/native": ^7.2.4
+    react: ">= 18.2.0"
+    react-native: "*"
+    react-native-gesture-handler: ">= 2.0.0"
+    react-native-reanimated: ">= 2.0.0"
+    react-native-safe-area-context: ">= 4.0.0"
+    react-native-screens: ">= 4.0.0"
+  checksum: 10c0/fda6f332cdb194e776b8fd0e173cdeecd833ae4db9acf40a0238066d7ea5e41ac18f31d542c9b1c4c15f803755d6ca0a74dc986f16c299abb308f1deb6577fa1
   languageName: node
   linkType: hard
 
@@ -6135,6 +6162,54 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-dev-client@npm:^55.0.33":
+  version: 55.0.33
+  resolution: "expo-dev-client@npm:55.0.33"
+  dependencies:
+    expo-dev-launcher: "npm:55.0.34"
+    expo-dev-menu: "npm:55.0.28"
+    expo-dev-menu-interface: "npm:55.0.2"
+    expo-manifests: "npm:~55.0.17"
+    expo-updates-interface: "npm:~55.1.6"
+  peerDependencies:
+    expo: "*"
+  checksum: 10c0/3111a46647e0e66b9f8c558ffaafb839f5a282d649dd690005d2c8bfc764a18d234c5f70a17c3927bd4a5b5e7cd775117043bb64af518093b88d4f900e6a1504
+  languageName: node
+  linkType: hard
+
+"expo-dev-launcher@npm:55.0.34":
+  version: 55.0.34
+  resolution: "expo-dev-launcher@npm:55.0.34"
+  dependencies:
+    "@expo/schema-utils": "npm:^55.0.4"
+    expo-dev-menu: "npm:55.0.28"
+    expo-manifests: "npm:~55.0.17"
+  peerDependencies:
+    expo: "*"
+  checksum: 10c0/9b29bc6dbedd647cab688cf979c856219707c0c71de2e46a072a4c03a355842ceefb411c98b63c00491a30ed119a1b3e4e8aedeabe6175a86718b0474a0928ed
+  languageName: node
+  linkType: hard
+
+"expo-dev-menu-interface@npm:55.0.2":
+  version: 55.0.2
+  resolution: "expo-dev-menu-interface@npm:55.0.2"
+  peerDependencies:
+    expo: "*"
+  checksum: 10c0/e13f4f235df2d3d9e35026553a3b49350ea08a7a1285634f15f8e957a39e3cf522f1f6a81a89396c66bfec452e664094e1711cf516db077da2d12ae844e3cabe
+  languageName: node
+  linkType: hard
+
+"expo-dev-menu@npm:55.0.28":
+  version: 55.0.28
+  resolution: "expo-dev-menu@npm:55.0.28"
+  dependencies:
+    expo-dev-menu-interface: "npm:55.0.2"
+  peerDependencies:
+    expo: "*"
+  checksum: 10c0/66a0e96bfdffc0aa935b85aa7f9f20e7d1a2cace9b5c936677c50b5c9cf199ec8e0cdbf3b74acf22113a19b18fa588e1e52bf4bf1cf86d62861930db04816dd8
+  languageName: node
+  linkType: hard
+
 "expo-file-system@npm:^55.0.19":
   version: 55.0.19
   resolution: "expo-file-system@npm:55.0.19"
@@ -6199,6 +6274,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-json-utils@npm:~55.0.2":
+  version: 55.0.2
+  resolution: "expo-json-utils@npm:55.0.2"
+  checksum: 10c0/0a20a9a0cd1d66691858cc447abc021d13ac5a75be30cdda10a642b7aa03fbf1ffac83c84702bda77bb29fc43a8063582620434725ce32a7c8555a154066c24c
+  languageName: node
+  linkType: hard
+
 "expo-keep-awake@npm:~15.0.8":
   version: 15.0.8
   resolution: "expo-keep-awake@npm:15.0.8"
@@ -6230,6 +6312,17 @@ __metadata:
   peerDependencies:
     expo: "*"
   checksum: 10c0/7dc575f0ed76a730a3c59ce558b1c5d6436bcbc6c762c07c755f339f3e71750b2f2933182dee10f6453ef0e8be7d314580d927cb19cb3d0b2ea2295cd8105bf1
+  languageName: node
+  linkType: hard
+
+"expo-manifests@npm:~55.0.17":
+  version: 55.0.17
+  resolution: "expo-manifests@npm:55.0.17"
+  dependencies:
+    expo-json-utils: "npm:~55.0.2"
+  peerDependencies:
+    expo: "*"
+  checksum: 10c0/84c4696b6eafd93f6254f292865c241754f38e55a7b10e2cedcd680e1c15621d090c4210961b876824361d3ada5716f7d8372eb633a4aa6e257a49b4b474b309
   languageName: node
   linkType: hard
 
@@ -6362,6 +6455,15 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10c0/b35ed996a3da45a657075447bbf687dad4e7d5321129182e58737ea0fa4aeb8bb145bbe20967abd6823587a738e4c6fd62c41d18d8c11094ff926e2079c02fc2
+  languageName: node
+  linkType: hard
+
+"expo-updates-interface@npm:~55.1.6":
+  version: 55.1.6
+  resolution: "expo-updates-interface@npm:55.1.6"
+  peerDependencies:
+    expo: "*"
+  checksum: 10c0/e876208cdec1890a34b45002d7d1f2d36f86b610207ef3c1b60fdd85c6d4d8358bde612711b306add34b62a7f2afac9c9553843ebb3a8cf097b59cbef4c87bc1
   languageName: node
   linkType: hard
 
@@ -6678,6 +6780,7 @@ __metadata:
   resolution: "garden-tracker@workspace:."
   dependencies:
     "@expo/vector-icons": "npm:^15.0.3"
+    "@react-navigation/drawer": "npm:^7.10.1"
     "@react-navigation/native": "npm:^7.1.8"
     "@shopify/flash-list": "npm:^2.3.1"
     "@shopify/react-native-skia": "npm:^2.6.2"
@@ -6689,6 +6792,7 @@ __metadata:
     expo-calendar: "npm:^55.0.14"
     expo-camera: "npm:^55.0.18"
     expo-constants: "npm:~18.0.13"
+    expo-dev-client: "npm:^55.0.33"
     expo-file-system: "npm:^55.0.19"
     expo-font: "npm:~14.0.11"
     expo-image-manipulator: "npm:^55.0.16"
@@ -9906,6 +10010,21 @@ __metadata:
     moment:
       optional: true
   checksum: 10c0/1a934bfff5f3f754028948f1ef303d529fe7e7c9802a21e5ef803bedc7493650e54be023145c1efb61eebf580e532544108fdd01257870c4d8ebf30fcd330fbb
+  languageName: node
+  linkType: hard
+
+"react-native-drawer-layout@npm:^4.2.4":
+  version: 4.2.4
+  resolution: "react-native-drawer-layout@npm:4.2.4"
+  dependencies:
+    color: "npm:^4.2.3"
+    use-latest-callback: "npm:^0.2.4"
+  peerDependencies:
+    react: ">= 18.2.0"
+    react-native: "*"
+    react-native-gesture-handler: ">= 2.0.0"
+    react-native-reanimated: ">= 2.0.0"
+  checksum: 10c0/b37e4c4df2cb862299cd5f330144542f57b6dfebb057275517eddb76a1ad5e3edc795bfb2d3144182cd8b40d4af75aa6376d7c0f1a62057595b6908f1c1ab45e
   languageName: node
   linkType: hard
 

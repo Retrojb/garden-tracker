@@ -1,3 +1,4 @@
+import { Button } from '@/src/components/Button'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import React from 'react'
 import { Pressable, ScrollView, Text, View } from 'react-native'
@@ -35,6 +36,7 @@ const PlantDetailScreen = () => {
         <Text style={{ color: '#9ca3af', fontSize: 14 }}>
           Plant details coming soon
         </Text>
+        <Button label='Button' />
       </View>
     </ScrollView>
   )

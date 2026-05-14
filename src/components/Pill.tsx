@@ -1,24 +1,45 @@
-import React from 'react';
-import { Text, View } from 'react-native';
-import { tv } from 'tailwind-variants';
+import React from 'react'
+import { Pressable, Text, View } from 'react-native'
+import { tv } from 'tailwind-variants'
+
+interface IPillProps {
+    text: string
+    onPress?: () => void
+    className?: string
+}
 
 const pillStyles = tv({
     slots: {
-        base: 'flex flex-col p-4 bg-green-600',
-    }
-});
+        base: 'rounded-full px-3 py-1.5 bg-green-600 self-start',
+        label: 'text-xs font-medium text-white',
+    },
+})
 
-// TODO: Add schema validation for any type of input (text, password)
-interface IInputProps extends View {
-    text: string;
-    children?: React.ReactElement;
-}
+const Pill = ({ text, onPress, className }: IPillProps) => {
+    const s = pillStyles()
 
-const Input = ({text, children, ...props}: IInputProps) => {
-    const { base } = pillStyles();
-    return (
-        <View className={base()}>
-            <Text className='color-white'>{text}</Text>
+    const content = (
+        <View className={s.base({ className })}>
+            <Text className={s.label()}>{text}</Text>
         </View>
     )
+
+    if (onPress) {
+    return (
+        <Pressable
+            onPress={onPress}
+            accessibilityRole="button"
+            accessibilityLabel={text}
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+        >
+            {content}
+        </Pressable>
+    )
+  }
+
+    return content
 }
+
+export { Pill }
+export type { IPillProps }
+

@@ -7,6 +7,7 @@
  * Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7
  */
 
+import { Fab } from '@/src/components/Fab'
 import { GardenFormModal } from '@/src/components/GardenFormModal'
 import { WeatherHeader } from '@/src/features/WeatherHeader'
 import { useGardens } from '@/src/hooks/useGardens'
@@ -14,11 +15,11 @@ import type { ICreateGardenPayload } from '@/src/types/TPayload'
 import { useRouter } from 'expo-router'
 import React, { useState } from 'react'
 import {
-    ActivityIndicator,
-    Pressable,
-    ScrollView,
-    Text,
-    View,
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
 } from 'react-native'
 import { tv } from 'tailwind-variants'
 
@@ -119,15 +120,11 @@ const GardensScreen = () => {
       )}
 
       {/* FAB */}
-      <Pressable
-        className={s.fab()}
+      <Fab
+        iconName="plus"
         onPress={() => setModalVisible(true)}
-        accessibilityRole="button"
         accessibilityLabel="Add garden"
-        style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
-      >
-        <Text className={s.fabText()}>+</Text>
-      </Pressable>
+      />
 
       {/* Create garden modal */}
       <GardenFormModal

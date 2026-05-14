@@ -13,6 +13,7 @@ const inputStyles = tv({
 // TODO: Add schema validation for any type of input (text, password)
 interface IInputProps extends TextInput {
     label: string;
+    isRequired?: boolean;
     children?: React.ReactElement;
 }
 

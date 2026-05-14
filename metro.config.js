@@ -3,8 +3,17 @@ const { withUniwindConfig } = require('uniwind/metro')
 
 const config = getDefaultConfig(__dirname)
 
-// your metro modifications
+// Add wasm asset support
+config.resolver.assetExts.push('wasm');
 
+// Add COEP and COOP headers to support SharedArrayBuffer
+config.server.enhanceMiddleware = (middleware) => {
+  return (req, res, next) => {
+    res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless');
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    middleware(req, res, next);
+  };
+};
 module.exports = withUniwindConfig(config, {
   // relative path to your global.css file (from previous step)
   cssEntryFile: './index.css',

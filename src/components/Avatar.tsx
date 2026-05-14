@@ -1,21 +1,84 @@
-import { Text, View } from 'react-native'
+import React from 'react'
+import { Image, Pressable, Text, View } from 'react-native'
 import { tv } from 'tailwind-variants'
 
-type TAvatarProps = {
-  children?: any
+type TAvatarSize = 'sm' | 'md' | 'lg'
+
+interface IAvatarProps {
   initials?: string
-  isPressable?: boolean
+  src?: string
+  size?: TAvatarSize
+  onPress?: () => void
+  className?: string
 }
 
-const avatar = tv({
+const avatarStyles = tv({
   slots: {
-    base: 'w-24 h-24 md:w-48 md:h-auto md:rounded-none rounded-full mx-auto drop-shadow-lg',
+    base: 'rounded-full items-center justify-center bg-green-100 overflow-hidden',
+    label: 'font-semibold text-green-800',
+    image: 'w-full h-full',
+  },
+  variants: {
+    size: {
+      sm: {
+        base: 'w-9 h-9',
+        label: 'text-xs',
+      },
+      md: {
+        base: 'w-16 h-16',
+        label: 'text-base',
+      },
+      lg: {
+        base: 'w-32 h-32',
+        label: 'text-2xl',
+      },
+    },
+  },
+  defaultVariants: {
+    size: 'md',
   },
 })
 
-const Avatar = ({ children, initials = 'JB', isPressable }: TAvatarProps) => {
-  const { base } = avatar()
-  return <View className={base()}>{initials && <Text>{initials}</Text>}</View>
+const Avatar = ({
+  initials = 'JB',
+  src,
+  size = 'md',
+  onPress,
+  className,
+}: IAvatarProps) => {
+  const s = avatarStyles({ size })
+
+  const content = (
+    <View className={s.base({ className })}>
+      {src ? (
+        <Image
+          source={{ uri: src }}
+          className={s.image()}
+          accessibilityLabel={`Avatar image`}
+          resizeMode="cover"
+        />
+      ) : (
+        <Text className={s.label()}>{initials}</Text>
+      )}
+    </View>
+  )
+
+  if (onPress) {
+    return (
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`Avatar ${initials}`}
+        style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+      >
+        {content}
+      </Pressable>
+    )
+  }
+
+  return content
 }
 
 export { Avatar }
+export type { IAvatarProps, TAvatarSize }
+
