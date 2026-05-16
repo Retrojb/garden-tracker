@@ -2,8 +2,9 @@
  * GardenFormModal
  *
  * A form modal for creating a new garden. Uses the generic Modal shell with
- * ModalHeader, ModalBody, and ModalFooter. Renders fields for name, type,
- * width, and height. Validates inline before calling `onSubmit`.
+ * ModalHeader, ModalBody, and ModalFooter plus shared FormField and
+ * SubmitButton components. Renders fields for name, type, width, and height.
+ * Validates inline before calling `onSubmit`.
  *
  * Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6
  */
@@ -12,15 +13,11 @@ import type { TGardenType } from '@/src/types/TGarden'
 import type { ICreateGardenPayload } from '@/src/types/TPayload'
 import { validateGarden } from '@/src/utils/validation'
 import React, { useState } from 'react'
-import {
-  ActivityIndicator,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from 'react-native'
+import { Pressable, Text, View } from 'react-native'
 import { tv } from 'tailwind-variants'
+import { FormField } from './FormField'
 import { Modal, ModalBody, ModalFooter, ModalHeader } from './Modal'
+import { SubmitButton } from './SubmitButton'
 
 // ---------------------------------------------------------------------------
 // Styles
@@ -28,10 +25,6 @@ import { Modal, ModalBody, ModalFooter, ModalHeader } from './Modal'
 
 const styles = tv({
   slots: {
-    label: 'text-sm font-medium text-gray-700 mb-1',
-    input:
-      'border border-gray-300 rounded-xl px-3 py-2.5 text-sm text-gray-900 bg-white mb-1',
-    inputError: 'border-red-400',
     errorText: 'text-xs text-red-500 mb-3',
     row: 'flex-row gap-3',
     halfField: 'flex-1',
@@ -40,9 +33,6 @@ const styles = tv({
     typeChipActive: 'border-green-600 bg-green-50',
     typeChipText: 'text-xs text-gray-600 capitalize',
     typeChipTextActive: 'text-green-700 font-semibold',
-    submitBtn: 'rounded-2xl bg-green-600 py-3.5 items-center justify-center',
-    submitBtnDisabled: 'bg-green-300',
-    submitBtnText: 'text-white font-semibold text-base',
   },
 })
 
@@ -87,6 +77,7 @@ const GardenFormModal = ({
   const [type, setType] = useState<TGardenType | ''>('')
   const [widthInches, setWidthInches] = useState('')
   const [heightInches, setHeightInches] = useState('')
+  const [lengthInches, setLengthInches] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -109,10 +100,11 @@ const GardenFormModal = ({
       name: name.trim() || undefined,
       type: type || undefined,
       dimensions:
-        widthInches || heightInches
+        widthInches || heightInches || lengthInches
           ? {
               widthInches: parseInt(widthInches, 10),
               heightInches: parseInt(heightInches, 10),
+            lengthInches: parseInt(lengthInches, 10),
             }
           : undefined,
     }
@@ -148,22 +140,21 @@ const GardenFormModal = ({
 
       <ModalBody>
         {/* Name */}
-        <Text className={s.label()}>Garden Name *</Text>
-        <TextInput
-          className={`${s.input()} ${fieldErrors.name ? s.inputError() : ''}`}
-          placeholder="e.g. Tomato Bed"
+        <FormField
+          label="Garden Name"
           value={name}
           onChangeText={setName}
+          error={fieldErrors.name}
+          required
+          placeholder="e.g. Tomato Bed"
           maxLength={110}
           returnKeyType="next"
-          accessibilityLabel="Garden name"
         />
-        {fieldErrors.name ? (
-          <Text className={s.errorText()}>{fieldErrors.name}</Text>
-        ) : null}
 
         {/* Type */}
-        <Text className={s.label()}>Garden Type *</Text>
+        <Text className="text-sm font-medium text-gray-700 mb-1">
+          Garden Type *
+        </Text>
         <View className={s.typeRow()}>
           {GARDEN_TYPES.map((t) => (
             <Pressable
@@ -189,60 +180,55 @@ const GardenFormModal = ({
         ) : null}
 
         {/* Dimensions */}
-        <Text className={s.label()}>Dimensions (inches) *</Text>
+        <Text className="text-sm font-medium text-gray-700 mb-1">
+          Dimensions (inches) *
+        </Text>
         <View className={s.row()}>
           <View className={s.halfField()}>
-            <TextInput
-              className={`${s.input()} ${fieldErrors['dimensions.widthInches'] ? s.inputError() : ''}`}
-              placeholder="Width"
+            <FormField
+              label="Width"
               value={widthInches}
               onChangeText={setWidthInches}
+              error={fieldErrors['dimensions.widthInches']}
+              placeholder="Width"
               keyboardType="number-pad"
               returnKeyType="next"
-              accessibilityLabel="Width in inches"
             />
-            {fieldErrors['dimensions.widthInches'] ? (
-              <Text className={s.errorText()}>
-                {fieldErrors['dimensions.widthInches']}
-              </Text>
-            ) : null}
           </View>
 
           <View className={s.halfField()}>
-            <TextInput
-              className={`${s.input()} ${fieldErrors['dimensions.heightInches'] ? s.inputError() : ''}`}
-              placeholder="Height"
+            <FormField
+              label="Height"
               value={heightInches}
               onChangeText={setHeightInches}
+              error={fieldErrors['dimensions.heightInches']}
+              placeholder="Height"
+              keyboardType="number-pad"
+              returnKeyType="next"
+            />
+          </View>
+
+          <View className={s.halfField()}>
+            <FormField
+              label="Length"
+              value={lengthInches}
+              onChangeText={setLengthInches}
+              error={fieldErrors['dimensions.lengthInches']}
+              placeholder="Length"
               keyboardType="number-pad"
               returnKeyType="done"
               onSubmitEditing={handleSubmit}
-              accessibilityLabel="Height in inches"
             />
-            {fieldErrors['dimensions.heightInches'] ? (
-              <Text className={s.errorText()}>
-                {fieldErrors['dimensions.heightInches']}
-              </Text>
-            ) : null}
           </View>
         </View>
       </ModalBody>
 
       <ModalFooter>
-        <Pressable
+        <SubmitButton
+          label="Create Garden"
           onPress={handleSubmit}
-          disabled={isSubmitting}
-          className={`${s.submitBtn()} ${isSubmitting ? s.submitBtnDisabled() : ''}`}
-          accessibilityRole="button"
-          accessibilityLabel="Create garden"
-          accessibilityState={{ disabled: isSubmitting }}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text className={s.submitBtnText()}>Create Garden</Text>
-          )}
-        </Pressable>
+          isLoading={isSubmitting}
+        />
       </ModalFooter>
     </Modal>
   )

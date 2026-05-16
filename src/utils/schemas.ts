@@ -80,6 +80,7 @@ const gardenTypeSchema = z.enum([
  * Validation rules:
  * - `widthInches`  : positive integer, max 1200
  * - `heightInches` : positive integer, max 1200
+ * - `lengthInches` : positive integer, max 1200
  */
 const gardenDimensionsSchema = z.object({
   widthInches: z
@@ -92,6 +93,11 @@ const gardenDimensionsSchema = z.object({
     .int('Height must be an integer')
     .min(1, 'Height must be greater than 0')
     .max(1200, 'Height must be 1200 inches or fewer'),
+  lengthInches: z
+    .number()
+    .int('Length must be an integer')
+    .min(1, 'Length must be greater than 0')
+    .max(1200, 'Length must be 1200 inches or fewer'),
 })
 
 /**
@@ -189,5 +195,6 @@ export {
   gardenSchema,
   gardenTypeSchema,
   photoSchema,
-  plantSchema,
+  plantSchema
 }
+

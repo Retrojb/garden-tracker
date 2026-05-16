@@ -1,74 +1,61 @@
 /**
- * usePlants hook
+ * useCalendar hook
  *
- * Manages plant CRUD operations with Zustand-backed local state.
+ * Manages calendar event CRUD operations with Zustand-backed local state.
  * When the device is online, operations are forwarded to the API and the
- * local state is updated on success. When offline, the current plants list
+ * local state is updated on success. When offline, the current events list
  * is served from the MMKV cache and mutations are enqueued via
  * `mutationQueue` for later sync.
  *
- * On delete, plants are marked as pending-delete to block concurrent updates
- * (Requirement 1.10).
+ * Accepts an optional `plantId` filter to return only events for a specific
+ * plant. Hides orphaned events (where the associated plant has been deleted)
+ * from normal views by cross-referencing the current plants list.
  *
- * Requirements: 1.1, 1.7, 1.8, 1.9, 1.10
+ * Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6
  */
 
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { create } from 'zustand'
 
 import { API_ROUTES } from '@/src/constants/api'
 import { apiClient } from '@/src/lib/apiClient'
 import { enqueue } from '@/src/lib/mutationQueue'
 import { get as storageGet, set as storageSet } from '@/src/lib/storage'
+import type { ICalendarEvent } from '@/src/types/TCalendar'
 import type {
-  ICreatePlantPayload,
-  IUpdatePlantPayload,
+    ICreateEventPayload,
+    IUpdateEventPayload,
 } from '@/src/types/TPayload'
-import type { IPlant } from '@/src/types/TPlant'
-import type { UsePlantsResult } from '@/src/types/TUsePlants'
+import type { UseCalendarResult } from '@/src/types/TUseCalendar'
+
+import { usePlants } from './usePlants'
 
 // ---------------------------------------------------------------------------
 // Cache key
 // ---------------------------------------------------------------------------
 
-const PLANTS_CACHE_KEY = 'plants_cache'
+const CALENDAR_CACHE_KEY = 'calendar_events_cache'
 
 // ---------------------------------------------------------------------------
 // Zustand store
 // ---------------------------------------------------------------------------
 
-interface PlantsState {
-  plants: IPlant[]
+interface CalendarState {
+  events: ICalendarEvent[]
   isLoading: boolean
   error: Error | null
-  pendingDeletes: Set<string>
-  _setPlants: (plants: IPlant[]) => void
+  _setEvents: (events: ICalendarEvent[]) => void
   _setLoading: (isLoading: boolean) => void
   _setError: (error: Error | null) => void
-  _addPendingDelete: (id: string) => void
-  _removePendingDelete: (id: string) => void
 }
 
-const usePlantsStore = create<PlantsState>((set) => ({
-  plants: [],
+const useCalendarStore = create<CalendarState>((set) => ({
+  events: [],
   isLoading: false,
   error: null,
-  pendingDeletes: new Set<string>(),
-  _setPlants: (plants) => set({ plants }),
+  _setEvents: (events) => set({ events }),
   _setLoading: (isLoading) => set({ isLoading }),
   _setError: (error) => set({ error }),
-  _addPendingDelete: (id) =>
-    set((state) => {
-      const next = new Set(state.pendingDeletes)
-      next.add(id)
-      return { pendingDeletes: next }
-    }),
-  _removePendingDelete: (id) =>
-    set((state) => {
-      const next = new Set(state.pendingDeletes)
-      next.delete(id)
-      return { pendingDeletes: next }
-    }),
 }))
 
 // ---------------------------------------------------------------------------
@@ -111,24 +98,37 @@ const generateId = (): string =>
 // Hook
 // ---------------------------------------------------------------------------
 
-const usePlants = (gardenId?: string): UsePlantsResult => {
-  const {
-    plants,
-    isLoading,
-    error,
-    pendingDeletes,
-    _setPlants,
-    _setLoading,
-    _setError,
-    _addPendingDelete,
-    _removePendingDelete,
-  } = usePlantsStore()
+const useCalendar = (plantId?: string): UseCalendarResult => {
+  const { events, isLoading, error, _setEvents, _setLoading, _setError } =
+    useCalendarStore()
+
+  // Req 4.6: get current plants list to detect orphaned events
+  const { plants } = usePlants()
 
   // -------------------------------------------------------------------------
-  // refreshPlants
+  // Derived: filter by plantId and hide orphaned events
   // -------------------------------------------------------------------------
 
-  const refreshPlants = useCallback(async (): Promise<void> => {
+  const filteredEvents = useMemo(() => {
+    // Build a set of valid plant IDs for O(1) lookup
+    const validPlantIds = new Set(plants.map((p) => p.id))
+
+    // Req 4.6: hide orphaned events (plant no longer exists)
+    let visible = events.filter((event) => validPlantIds.has(event.plantId))
+
+    // Req 4.2: filter by plantId when provided
+    if (plantId) {
+      visible = visible.filter((event) => event.plantId === plantId)
+    }
+
+    return visible
+  }, [events, plants, plantId])
+
+  // -------------------------------------------------------------------------
+  // refreshEvents
+  // -------------------------------------------------------------------------
+
+  const refreshEvents = useCallback(async (): Promise<void> => {
     _setLoading(true)
     _setError(null)
 
@@ -137,58 +137,56 @@ const usePlants = (gardenId?: string): UsePlantsResult => {
 
       if (!online) {
         // Req 8.1: serve from cache when offline
-        const cached = storageGet<IPlant[]>(PLANTS_CACHE_KEY)
-        _setPlants(cached ?? [])
+        const cached = storageGet<ICalendarEvent[]>(CALENDAR_CACHE_KEY)
+        _setEvents(cached ?? [])
         _setLoading(false)
         return
       }
 
-      const route = gardenId
-        ? `${API_ROUTES.PLANTS}?gardenId=${gardenId}`
-        : API_ROUTES.PLANTS
-      const response = await apiClient.get<IPlant[]>(route)
-      const data = gardenId
-        ? response.data.filter((p) => p.gardenId === gardenId)
-        : response.data
-      _setPlants(data)
+      const response = await apiClient.get<ICalendarEvent[]>(
+        API_ROUTES.CALENDAR
+      )
+      _setEvents(response.data)
       // Persist to cache for offline use
-      storageSet<IPlant[]>(PLANTS_CACHE_KEY, data)
+      storageSet<ICalendarEvent[]>(CALENDAR_CACHE_KEY, response.data)
     } catch (err) {
+      // Req 9.3: set error state, do not crash
       _setError(err instanceof Error ? err : new Error(String(err)))
     } finally {
       _setLoading(false)
     }
-  }, [gardenId, _setPlants, _setLoading, _setError])
+  }, [_setEvents, _setLoading, _setError])
 
   // -------------------------------------------------------------------------
-  // createPlant
+  // createEvent
   // -------------------------------------------------------------------------
 
-  const createPlant = useCallback(
-    async (payload: ICreatePlantPayload): Promise<IPlant> => {
+  const createEvent = useCallback(
+    async (payload: ICreateEventPayload): Promise<ICalendarEvent> => {
       _setError(null)
 
       const online = await isOnline()
 
       if (!online) {
         // Req 8.1 / 8.2: optimistic local record + enqueue mutation
-        const optimistic: IPlant = {
+        const optimistic: ICalendarEvent = {
           id: generateId(),
-          name: payload.name,
-          species: payload.species,
-          variety: payload.variety,
-          gardenId: '',
+          plantId: payload.plantId,
+          gardenId: payload.gardenId,
+          eventType: payload.eventType,
+          date: payload.date,
+          notes: payload.notes,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         }
 
-        const updated = [...plants, optimistic]
-        _setPlants(updated)
-        storageSet<IPlant[]>(PLANTS_CACHE_KEY, updated)
+        const updated = [...events, optimistic]
+        _setEvents(updated)
+        storageSet<ICalendarEvent[]>(CALENDAR_CACHE_KEY, updated)
 
         await enqueue({
           type: 'create',
-          resource: API_ROUTES.PLANTS,
+          resource: API_ROUTES.CALENDAR,
           payload,
         })
 
@@ -196,16 +194,16 @@ const usePlants = (gardenId?: string): UsePlantsResult => {
       }
 
       try {
-        const response = await apiClient.post<IPlant>(
-          API_ROUTES.PLANTS,
+        const response = await apiClient.post<ICalendarEvent>(
+          API_ROUTES.CALENDAR,
           payload
         )
         const created = response.data
 
-        // Req 1.7: append to list
-        const updated = [...plants, created]
-        _setPlants(updated)
-        storageSet<IPlant[]>(PLANTS_CACHE_KEY, updated)
+        // Req 4.1: append to list and persist
+        const updated = [...events, created]
+        _setEvents(updated)
+        storageSet<ICalendarEvent[]>(CALENDAR_CACHE_KEY, updated)
 
         return created
       } catch (err) {
@@ -214,48 +212,42 @@ const usePlants = (gardenId?: string): UsePlantsResult => {
         throw error
       }
     },
-    [plants, _setPlants, _setError]
+    [events, _setEvents, _setError]
   )
 
   // -------------------------------------------------------------------------
-  // updatePlant
+  // updateEvent
   // -------------------------------------------------------------------------
 
-  const updatePlant = useCallback(
-    async (id: string, payload: IUpdatePlantPayload): Promise<IPlant> => {
+  const updateEvent = useCallback(
+    async (
+      id: string,
+      payload: IUpdateEventPayload
+    ): Promise<ICalendarEvent> => {
       _setError(null)
-
-      // Req 1.10: block updates on plants that are pending-delete
-      if (pendingDeletes.has(id)) {
-        const error = new Error(
-          `Cannot update plant "${id}": delete is in progress`
-        )
-        _setError(error)
-        throw error
-      }
 
       const online = await isOnline()
 
       if (!online) {
         // Req 8.1 / 8.2: optimistic update + enqueue mutation
-        const existing = plants.find((p) => p.id === id)
+        const existing = events.find((e) => e.id === id)
         if (!existing) {
-          throw new Error(`Plant with id "${id}" not found`)
+          throw new Error(`Calendar event with id "${id}" not found`)
         }
 
-        const optimistic: IPlant = {
+        const optimistic: ICalendarEvent = {
           ...existing,
           ...payload,
           updatedAt: new Date().toISOString(),
         }
 
-        const updated = plants.map((p) => (p.id === id ? optimistic : p))
-        _setPlants(updated)
-        storageSet<IPlant[]>(PLANTS_CACHE_KEY, updated)
+        const updated = events.map((e) => (e.id === id ? optimistic : e))
+        _setEvents(updated)
+        storageSet<ICalendarEvent[]>(CALENDAR_CACHE_KEY, updated)
 
         await enqueue({
           type: 'update',
-          resource: `${API_ROUTES.PLANTS}/${id}`,
+          resource: `${API_ROUTES.CALENDAR}/${id}`,
           payload,
         })
 
@@ -263,72 +255,66 @@ const usePlants = (gardenId?: string): UsePlantsResult => {
       }
 
       try {
-        const response = await apiClient.put<IPlant>(
-          `${API_ROUTES.PLANTS}/${id}`,
+        const response = await apiClient.put<ICalendarEvent>(
+          `${API_ROUTES.CALENDAR}/${id}`,
           payload
         )
-        const updatedPlant = response.data
+        const updatedEvent = response.data
 
-        // Req 1.8: replace in-place by id
-        const updated = plants.map((p) => (p.id === id ? updatedPlant : p))
-        _setPlants(updated)
-        storageSet<IPlant[]>(PLANTS_CACHE_KEY, updated)
+        // Req 4.3: replace in-place by id
+        const updated = events.map((e) => (e.id === id ? updatedEvent : e))
+        _setEvents(updated)
+        storageSet<ICalendarEvent[]>(CALENDAR_CACHE_KEY, updated)
 
-        return updatedPlant
+        return updatedEvent
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err))
         _setError(error)
         throw error
       }
     },
-    [plants, pendingDeletes, _setPlants, _setError]
+    [events, _setEvents, _setError]
   )
 
   // -------------------------------------------------------------------------
-  // deletePlant
+  // deleteEvent
   // -------------------------------------------------------------------------
 
-  const deletePlant = useCallback(
+  const deleteEvent = useCallback(
     async (id: string): Promise<void> => {
       _setError(null)
-
-      // Req 1.10: mark as pending-delete to block concurrent updates
-      _addPendingDelete(id)
 
       const online = await isOnline()
 
       if (!online) {
         // Req 8.1 / 8.2: optimistic removal + enqueue mutation
-        const updated = plants.filter((p) => p.id !== id)
-        _setPlants(updated)
-        storageSet<IPlant[]>(PLANTS_CACHE_KEY, updated)
+        const updated = events.filter((e) => e.id !== id)
+        _setEvents(updated)
+        storageSet<ICalendarEvent[]>(CALENDAR_CACHE_KEY, updated)
 
         await enqueue({
           type: 'delete',
-          resource: `${API_ROUTES.PLANTS}/${id}`,
+          resource: `${API_ROUTES.CALENDAR}/${id}`,
           payload: null,
         })
 
-        _removePendingDelete(id)
         return
       }
 
       try {
-        await apiClient.delete(`${API_ROUTES.PLANTS}/${id}`)
+        await apiClient.delete(`${API_ROUTES.CALENDAR}/${id}`)
 
-        // Req 1.9: remove from list
-        const updated = plants.filter((p) => p.id !== id)
-        _setPlants(updated)
-        storageSet<IPlant[]>(PLANTS_CACHE_KEY, updated)
+        // Req 4.4: remove from list
+        const updated = events.filter((e) => e.id !== id)
+        _setEvents(updated)
+        storageSet<ICalendarEvent[]>(CALENDAR_CACHE_KEY, updated)
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err))
         _setError(error)
         throw error
-      } finally {
-        _removePendingDelete(id)
       }
     },
-    [plants, _setPlants, _setError, _addPendingDelete, _removePendingDelete]
+    [events, _setEvents, _setError]
   )
 
   // -------------------------------------------------------------------------
@@ -336,7 +322,7 @@ const usePlants = (gardenId?: string): UsePlantsResult => {
   // -------------------------------------------------------------------------
 
   useEffect(() => {
-    void refreshPlants()
+    void refreshEvents()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -345,14 +331,14 @@ const usePlants = (gardenId?: string): UsePlantsResult => {
   // -------------------------------------------------------------------------
 
   return {
-    plants,
+    events: filteredEvents,
     isLoading,
     error,
-    refreshPlants,
-    createPlant,
-    updatePlant,
-    deletePlant,
+    refreshEvents,
+    createEvent,
+    updateEvent,
+    deleteEvent,
   }
 }
 
-export { _setIsOnlineImpl, usePlants }
+export { _setIsOnlineImpl, useCalendar }

@@ -1,29 +1,69 @@
 /**
- * Typed API client stub.
+ * Typed API client wrapper.
  *
- * This module provides a minimal typed wrapper around fetch that attaches the
- * Cognito JWT automatically (once auth is wired up in task 4.1). For now it
- * performs plain fetch calls against the configured API base URL.
+ * Provides GET, POST, PUT, DELETE methods that automatically attach the
+ * Cognito JWT access token to every request via the Authorization header.
  *
- * Replace the internals here when `src/lib/amplify.ts` is implemented in
- * task 4.1 — the exported `apiClient` interface must remain stable.
+ * All methods return a typed `IApiResponse<T>` containing `data` and `status`.
  */
 
 import { API_BASE_URL } from '@/src/constants/api'
-import { IApiResponse } from '../types/TResponse'
+import { getAccessToken } from '@/src/lib/amplify'
+import type { IApiRequestOptions } from '@/src/types/TAmplify'
+import type { IApiResponse } from '@/src/types/TResponse'
 
-const getAuthHeaders = (): Record<string, string> => {
-  // TODO (task 4.1): retrieve Cognito JWT from Amplify Auth and attach here
-  return {
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Builds the request headers including the Cognito JWT when available.
+ */
+const getAuthHeaders = async (
+  extra?: Record<string, string>
+): Promise<Record<string, string>> => {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    ...extra,
   }
+
+  const token = await getAccessToken()
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  return headers
 }
 
-const get = async <T = unknown>(path: string): Promise<IApiResponse<T>> => {
-  const url = `${API_BASE_URL}${path}`
+/**
+ * Builds a full URL from a path and optional query params.
+ */
+const buildRequestUrl = (
+  path: string,
+  queryParams?: Record<string, string>
+): string => {
+  const base = `${API_BASE_URL}${path}`
+  if (!queryParams || Object.keys(queryParams).length === 0) {
+    return base
+  }
+  const qs = new URLSearchParams(queryParams).toString()
+  return `${base}?${qs}`
+}
+
+// ---------------------------------------------------------------------------
+// API methods
+// ---------------------------------------------------------------------------
+
+const get = async <T = unknown>(
+  path: string,
+  options?: IApiRequestOptions
+): Promise<IApiResponse<T>> => {
+  const url = buildRequestUrl(path, options?.queryParams)
+  const headers = await getAuthHeaders(options?.headers)
+
   const response = await fetch(url, {
     method: 'GET',
-    headers: getAuthHeaders(),
+    headers,
   })
 
   if (!response.ok) {
@@ -36,13 +76,16 @@ const get = async <T = unknown>(path: string): Promise<IApiResponse<T>> => {
 
 const post = async <T = unknown>(
   path: string,
-  body: unknown
+  body?: unknown,
+  options?: IApiRequestOptions
 ): Promise<IApiResponse<T>> => {
-  const url = `${API_BASE_URL}${path}`
+  const url = buildRequestUrl(path, options?.queryParams)
+  const headers = await getAuthHeaders(options?.headers)
+
   const response = await fetch(url, {
     method: 'POST',
-    headers: getAuthHeaders(),
-    body: JSON.stringify(body),
+    headers,
+    body: body != null ? JSON.stringify(body) : undefined,
   })
 
   if (!response.ok) {
@@ -55,13 +98,16 @@ const post = async <T = unknown>(
 
 const put = async <T = unknown>(
   path: string,
-  body: unknown
+  body?: unknown,
+  options?: IApiRequestOptions
 ): Promise<IApiResponse<T>> => {
-  const url = `${API_BASE_URL}${path}`
+  const url = buildRequestUrl(path, options?.queryParams)
+  const headers = await getAuthHeaders(options?.headers)
+
   const response = await fetch(url, {
     method: 'PUT',
-    headers: getAuthHeaders(),
-    body: JSON.stringify(body),
+    headers,
+    body: body != null ? JSON.stringify(body) : undefined,
   })
 
   if (!response.ok) {
@@ -72,11 +118,16 @@ const put = async <T = unknown>(
   return { data, status: response.status }
 }
 
-const del = async <T = unknown>(path: string): Promise<IApiResponse<T>> => {
-  const url = `${API_BASE_URL}${path}`
+const del = async <T = unknown>(
+  path: string,
+  options?: IApiRequestOptions
+): Promise<IApiResponse<T>> => {
+  const url = buildRequestUrl(path, options?.queryParams)
+  const headers = await getAuthHeaders(options?.headers)
+
   const response = await fetch(url, {
     method: 'DELETE',
-    headers: getAuthHeaders(),
+    headers,
   })
 
   if (!response.ok) {

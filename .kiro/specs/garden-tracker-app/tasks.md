@@ -13,7 +13,7 @@ Implement the Garden Tracker App as a React Native (Expo) application using Type
   - Set up Jest config (`jest.config.js`) and `@testing-library/react-native` with Expo preset
   - _Requirements: 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 10.1_
 
-- [ ] 2. Validation utilities
+- [x] 2. Validation utilities
   - [x] 2.1 Implement `validatePlant` in `src/utils/validation.ts`
     - Implement the `validatePlant(input)` algorithm from the design: check `name` (required, 1–100 chars), `species` (required, 1–100 chars), `variety` (optional, max 100 chars)
     - Return `{ valid: true, errors: [] }` or `{ valid: false, errors: [...] }` without mutating input
@@ -24,7 +24,7 @@ Implement the Garden Tracker App as a React Native (Expo) application using Type
     - **Property 9: Plant Validation Round-Trip** — `validatePlant` never mutates its input
     - **Validates: Requirements 1.2, 1.3, 1.4, 1.5, 1.6**
 
-  - [ ] 2.3 Implement `validateGarden` in `src/utils/validation.ts`
+  - [x] 2.3 Implement `validateGarden` in `src/utils/validation.ts`
     - Check `name` (required, 1–100 chars), `type` (must be valid `GardenType`), `dimensions.widthInches` (positive integer, ≤ 1200), `dimensions.heightInches` (positive integer, ≤ 1200)
     - _Requirements: 2.2, 2.3, 2.4, 2.5, 2.6_
 
@@ -36,25 +36,25 @@ Implement the Garden Tracker App as a React Native (Expo) application using Type
     - Export `plantSchema`, `gardenSchema`, `calendarEventSchema`, `photoSchema` for runtime API payload validation
     - _Requirements: 10.4_
 
-  - [ ]\* 2.6 Write property tests for data serialization round-trip
+  - [x] 2.6 Write property tests for data serialization round-trip
     - **Property 10: Data Serialization Round-Trip** — for any valid `Plant`, `Garden`, `CalendarEvent`, or `Photo`, `JSON.parse(JSON.stringify(obj))` produces a structurally equivalent object
     - **Validates: Requirements 10.1, 10.2**
 
 - [ ] 3. Checkpoint — Ensure all validation tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 4. AWS Amplify auth and API client setup
-  - [ ] 4.1 Configure AWS Amplify in `src/lib/amplify.ts`
+- [x] 4. AWS Amplify auth and API client setup
+  - [x] 4.1 Configure AWS Amplify in `src/lib/amplify.ts`
     - Initialize Amplify with Cognito User Pool and API Gateway endpoint from environment/EAS secrets
     - Export typed `apiClient` wrapper (GET, POST, PUT, DELETE) that attaches the Cognito JWT automatically
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-  - [ ] 4.2 Implement token refresh and sign-out logic in `src/lib/auth.ts`
+  - [x] 4.2 Implement token refresh and sign-out logic in `src/lib/auth.ts`
     - Auto-refresh Cognito JWT on expiry; on refresh failure, emit an event that triggers re-authentication prompt
     - Implement `signOut()` that clears all locally cached user data (MMKV + SQLite) and navigates to sign-in
     - _Requirements: 7.2, 7.3, 7.5_
 
-  - [ ]\* 4.3 Write unit tests for sign-out cache clearing
+  - [x] 4.3 Write unit tests for sign-out cache clearing
     - **Property 17: Sign-Out Cache Clearing** — after `signOut()`, local cache must be empty; no user-specific data remains
     - **Validates: Requirements 7.5**
 
@@ -73,7 +73,7 @@ Implement the Garden Tracker App as a React Native (Expo) application using Type
     - **Property 14: Offline Mutation Queuing** — any mutation enqueued while offline must appear in the queue and be flushed on reconnect
     - **Validates: Requirements 8.2**
 
-- [ ] 6. Core data hooks
+- [x] 6. Core data hooks
   - [x] 6.1 Implement `useGardens` hook in `src/hooks/useGardens.ts`
     - Manage `gardens: Garden[]`, `isLoading`, `error` state with Zustand
     - Implement `createGarden`, `updateGarden`, `deleteGarden`, `refreshGardens` calling `apiClient`
@@ -84,13 +84,13 @@ Implement the Garden Tracker App as a React Native (Expo) application using Type
     - **Property 8: CRUD Idempotency** — calling `updateGarden` with the same payload twice produces the same final state as calling it once
     - **Validates: Requirements 2.9**
 
-  - [ ] 6.3 Implement `usePlants` hook in `src/hooks/usePlants.ts`
+  - [x] 6.3 Implement `usePlants` hook in `src/hooks/usePlants.ts`
     - Manage `plants: Plant[]`, `isLoading`, `error` state
     - Implement `createPlant`, `updatePlant`, `deletePlant` with API calls and local state sync
     - On delete, mark plant as pending-delete to block concurrent updates (Requirement 1.10)
     - _Requirements: 1.1, 1.7, 1.8, 1.9, 1.10_
 
-  - [ ] 6.4 Implement `useCalendar` hook in `src/hooks/useCalendar.ts`
+  - [x] 6.4 Implement `useCalendar` hook in `src/hooks/useCalendar.ts`
     - Accept optional `plantId` filter; fetch events from API and filter client-side
     - Implement `createEvent`, `updateEvent`, `deleteEvent`
     - Hide orphaned events (where associated plant is deleted) from normal views

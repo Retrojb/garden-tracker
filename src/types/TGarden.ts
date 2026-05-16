@@ -14,6 +14,8 @@ interface IGardenDimensions {
   widthInches: number
   /** Height/depth in inches */
   heightInches: number
+  /** Lenght/depth in inches */
+  lengthInches: number
 }
 
 interface IGarden {

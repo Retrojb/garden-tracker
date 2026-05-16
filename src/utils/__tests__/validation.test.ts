@@ -1,5 +1,6 @@
+import type { ICreateGardenPayload } from '@/src/types/TPayload'
 import * as fc from 'fast-check'
-import { validatePlant } from '../validation'
+import { validateGarden, validatePlant } from '../validation'
 
 describe('validatePlant', () => {
   // -------------------------------------------------------------------------
@@ -452,6 +453,361 @@ describe('validatePlant — property-based tests', () => {
           expect(JSON.stringify(input)).toBe(snapshot)
         })
       )
+    })
+  })
+})
+
+
+// =============================================================================
+// validateGarden — Unit Tests
+// Validates: Requirements 2.2, 2.3, 2.4, 2.5, 2.6
+// =============================================================================
+
+describe('validateGarden', () => {
+  // Helper to build a valid garden payload
+  const validGarden: ICreateGardenPayload = {
+    name: 'My Garden',
+    type: 'raised_bed',
+    dimensions: { widthInches: 48, heightInches: 96 },
+  }
+
+  // -------------------------------------------------------------------------
+  // Valid inputs
+  // -------------------------------------------------------------------------
+
+  describe('valid inputs', () => {
+    it('accepts a garden with valid name, type, and dimensions', () => {
+      const result = validateGarden(validGarden)
+      expect(result.valid).toBe(true)
+      expect(result.errors).toHaveLength(0)
+    })
+
+    it('accepts all valid garden types', () => {
+      const types = ['raised_bed', 'in_ground', 'container', 'greenhouse', 'other'] as const
+      for (const type of types) {
+        const result = validateGarden({ ...validGarden, type })
+        expect(result.valid).toBe(true)
+        expect(result.errors).toHaveLength(0)
+      }
+    })
+
+    it('accepts name at exactly 100 characters', () => {
+      const result = validateGarden({ ...validGarden, name: 'a'.repeat(100) })
+      expect(result.valid).toBe(true)
+      expect(result.errors).toHaveLength(0)
+    })
+
+    it('accepts widthInches at minimum (1)', () => {
+      const result = validateGarden({
+        ...validGarden,
+        dimensions: { widthInches: 1, heightInches: 48 },
+      })
+      expect(result.valid).toBe(true)
+      expect(result.errors).toHaveLength(0)
+    })
+
+    it('accepts heightInches at minimum (1)', () => {
+      const result = validateGarden({
+        ...validGarden,
+        dimensions: { widthInches: 48, heightInches: 1 },
+      })
+      expect(result.valid).toBe(true)
+      expect(result.errors).toHaveLength(0)
+    })
+
+    it('accepts widthInches at maximum (1200)', () => {
+      const result = validateGarden({
+        ...validGarden,
+        dimensions: { widthInches: 1200, heightInches: 48 },
+      })
+      expect(result.valid).toBe(true)
+      expect(result.errors).toHaveLength(0)
+    })
+
+    it('accepts heightInches at maximum (1200)', () => {
+      const result = validateGarden({
+        ...validGarden,
+        dimensions: { widthInches: 48, heightInches: 1200 },
+      })
+      expect(result.valid).toBe(true)
+      expect(result.errors).toHaveLength(0)
+    })
+  })
+
+  // -------------------------------------------------------------------------
+  // name validation
+  // -------------------------------------------------------------------------
+
+  describe('name validation', () => {
+    it('rejects missing name (undefined)', () => {
+      const { name, ...rest } = validGarden
+      const result = validateGarden(rest)
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContainEqual({
+        field: 'name',
+        message: 'Name is required',
+      })
+    })
+
+    it('rejects null name', () => {
+      const result = validateGarden({ ...validGarden, name: null as unknown as string })
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContainEqual({
+        field: 'name',
+        message: 'Name is required',
+      })
+    })
+
+    it('rejects empty string name', () => {
+      const result = validateGarden({ ...validGarden, name: '' })
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContainEqual({
+        field: 'name',
+        message: 'Name is required',
+      })
+    })
+
+    it('rejects whitespace-only name', () => {
+      const result = validateGarden({ ...validGarden, name: '   ' })
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContainEqual({
+        field: 'name',
+        message: 'Name is required',
+      })
+    })
+
+    it('rejects name exceeding 100 characters', () => {
+      const result = validateGarden({ ...validGarden, name: 'a'.repeat(101) })
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContainEqual({
+        field: 'name',
+        message: 'Name must be 100 characters or fewer',
+      })
+    })
+  })
+
+  // -------------------------------------------------------------------------
+  // type validation
+  // -------------------------------------------------------------------------
+
+  describe('type validation', () => {
+    it('rejects missing type (undefined)', () => {
+      const { type, ...rest } = validGarden
+      const result = validateGarden(rest)
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContainEqual({
+        field: 'type',
+        message: 'A valid garden type is required',
+      })
+    })
+
+    it('rejects null type', () => {
+      const result = validateGarden({ ...validGarden, type: null as unknown as any })
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContainEqual({
+        field: 'type',
+        message: 'A valid garden type is required',
+      })
+    })
+
+    it('rejects invalid type string', () => {
+      const result = validateGarden({ ...validGarden, type: 'invalid_type' as any })
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContainEqual({
+        field: 'type',
+        message: 'A valid garden type is required',
+      })
+    })
+  })
+
+  // -------------------------------------------------------------------------
+  // dimensions.widthInches validation
+  // -------------------------------------------------------------------------
+
+  describe('dimensions.widthInches validation', () => {
+    it('rejects missing dimensions entirely', () => {
+      const { dimensions, ...rest } = validGarden
+      const result = validateGarden(rest)
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContainEqual({
+        field: 'dimensions.widthInches',
+        message: 'Width must be a whole number between 1 and 1200 inches',
+      })
+    })
+
+    it('rejects widthInches of 0', () => {
+      const result = validateGarden({
+        ...validGarden,
+        dimensions: { widthInches: 0, heightInches: 48 },
+      })
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContainEqual({
+        field: 'dimensions.widthInches',
+        message: 'Width must be a whole number between 1 and 1200 inches',
+      })
+    })
+
+    it('rejects negative widthInches', () => {
+      const result = validateGarden({
+        ...validGarden,
+        dimensions: { widthInches: -5, heightInches: 48 },
+      })
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContainEqual({
+        field: 'dimensions.widthInches',
+        message: 'Width must be a whole number between 1 and 1200 inches',
+      })
+    })
+
+    it('rejects widthInches exceeding 1200', () => {
+      const result = validateGarden({
+        ...validGarden,
+        dimensions: { widthInches: 1201, heightInches: 48 },
+      })
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContainEqual({
+        field: 'dimensions.widthInches',
+        message: 'Width must be a whole number between 1 and 1200 inches',
+      })
+    })
+
+    it('rejects non-integer widthInches', () => {
+      const result = validateGarden({
+        ...validGarden,
+        dimensions: { widthInches: 48.5, heightInches: 48 },
+      })
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContainEqual({
+        field: 'dimensions.widthInches',
+        message: 'Width must be a whole number between 1 and 1200 inches',
+      })
+    })
+  })
+
+  // -------------------------------------------------------------------------
+  // dimensions.heightInches validation
+  // -------------------------------------------------------------------------
+
+  describe('dimensions.heightInches validation', () => {
+    it('rejects heightInches of 0', () => {
+      const result = validateGarden({
+        ...validGarden,
+        dimensions: { widthInches: 48, heightInches: 0 },
+      })
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContainEqual({
+        field: 'dimensions.heightInches',
+        message: 'Height must be a whole number between 1 and 1200 inches',
+      })
+    })
+
+    it('rejects negative heightInches', () => {
+      const result = validateGarden({
+        ...validGarden,
+        dimensions: { widthInches: 48, heightInches: -10 },
+      })
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContainEqual({
+        field: 'dimensions.heightInches',
+        message: 'Height must be a whole number between 1 and 1200 inches',
+      })
+    })
+
+    it('rejects heightInches exceeding 1200', () => {
+      const result = validateGarden({
+        ...validGarden,
+        dimensions: { widthInches: 48, heightInches: 1201 },
+      })
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContainEqual({
+        field: 'dimensions.heightInches',
+        message: 'Height must be a whole number between 1 and 1200 inches',
+      })
+    })
+
+    it('rejects non-integer heightInches', () => {
+      const result = validateGarden({
+        ...validGarden,
+        dimensions: { widthInches: 48, heightInches: 96.7 },
+      })
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContainEqual({
+        field: 'dimensions.heightInches',
+        message: 'Height must be a whole number between 1 and 1200 inches',
+      })
+    })
+  })
+
+  // -------------------------------------------------------------------------
+  // Multiple errors
+  // -------------------------------------------------------------------------
+
+  describe('multiple errors', () => {
+    it('collects errors for all fields when all are invalid', () => {
+      const result = validateGarden({})
+      expect(result.valid).toBe(false)
+      expect(result.errors.length).toBeGreaterThanOrEqual(4)
+      expect(result.errors).toContainEqual({
+        field: 'name',
+        message: 'Name is required',
+      })
+      expect(result.errors).toContainEqual({
+        field: 'type',
+        message: 'A valid garden type is required',
+      })
+      expect(result.errors).toContainEqual({
+        field: 'dimensions.widthInches',
+        message: 'Width must be a whole number between 1 and 1200 inches',
+      })
+      expect(result.errors).toContainEqual({
+        field: 'dimensions.heightInches',
+        message: 'Height must be a whole number between 1 and 1200 inches',
+      })
+    })
+
+    it('collects errors for name and dimensions when type is valid but others are not', () => {
+      const result = validateGarden({
+        type: 'container',
+        name: '',
+        dimensions: { widthInches: 0, heightInches: -1 },
+      })
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContainEqual({
+        field: 'name',
+        message: 'Name is required',
+      })
+      expect(result.errors).toContainEqual({
+        field: 'dimensions.widthInches',
+        message: 'Width must be a whole number between 1 and 1200 inches',
+      })
+      expect(result.errors).toContainEqual({
+        field: 'dimensions.heightInches',
+        message: 'Height must be a whole number between 1 and 1200 inches',
+      })
+    })
+  })
+
+  // -------------------------------------------------------------------------
+  // No mutation
+  // -------------------------------------------------------------------------
+
+  describe('no mutation', () => {
+    it('does not mutate the input object', () => {
+      const input = {
+        name: 'My Garden',
+        type: 'raised_bed' as const,
+        dimensions: { widthInches: 48, heightInches: 96 },
+      }
+      const before = JSON.stringify(input)
+      validateGarden(input)
+      expect(JSON.stringify(input)).toBe(before)
+    })
+
+    it('does not mutate an invalid input object', () => {
+      const input = { name: '', type: 'invalid' as any, dimensions: { widthInches: 0, heightInches: -1 } }
+      const before = JSON.stringify(input)
+      validateGarden(input)
+      expect(JSON.stringify(input)).toBe(before)
     })
   })
 })

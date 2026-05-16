@@ -78,7 +78,7 @@ const VALID_GARDEN_TYPES = [
  *  - `type`                     : required, must be a valid TGardenType
  *  - `dimensions.widthInches`   : required, positive integer, max 1200
  *  - `dimensions.heightInches`  : required, positive integer, max 1200
- *
+ *. - `dimensions.lengthInches`  : required, positive integer, max 1200
  * The function never mutates its input.
  *
  * @param input - A partial garden payload supplied by the user
@@ -122,6 +122,15 @@ const validateGarden = (
     errors.push({
       field: 'dimensions.heightInches',
       message: 'Height must be a whole number between 1 and 1200 inches',
+    })
+  }
+
+  // --- dimensions.lengthInches ---
+  const l = input.dimensions?.lengthInches
+  if (h == null || !Number.isInteger(h) || h <= 0 || h > 1200) {
+    errors.push({
+      field: 'dimensions.lenghtInches',
+      message: 'Lenght must be a whole number between 1 and 1200 inches',
     })
   }
 

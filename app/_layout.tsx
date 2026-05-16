@@ -1,3 +1,4 @@
+import PageHeader from '@/src/components/navigation/PageHeader'
 import FontAwesome from '@expo/vector-icons/FontAwesome'
 import { useFonts } from 'expo-font'
 import { Stack } from 'expo-router'
@@ -44,11 +45,14 @@ const RootLayout = (): React.ReactElement | null => {
 
 const RootLayoutNav = (): React.ReactElement => {
   return (
-    <Stack>
-      <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-      <Stack.Screen name="plants/[id]" options={{ title: 'Plant Detail' }} />
-      <Stack.Screen name="gardens/[id]" options={{ title: 'Garden Detail' }} />
-    </Stack>
+    <>
+      <PageHeader />
+      <Stack>
+        <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+        <Stack.Screen name="plants/[id]" options={{ title: 'Plant Detail' }} />
+        <Stack.Screen name="gardens/[id]" options={{ title: 'Garden Detail' }} />
+      </Stack>
+    </>
   )
 }
 
