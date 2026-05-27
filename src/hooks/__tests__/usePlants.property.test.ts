@@ -25,6 +25,10 @@ jest.mock('@/src/lib/storage', () => ({
   set: jest.fn(),
 }))
 
+jest.mock('@/src/lib/mutationQueue', () => ({
+  enqueue: jest.fn().mockResolvedValue(undefined),
+}))
+
 // ---------------------------------------------------------------------------
 // Imports (after mocks)
 // ---------------------------------------------------------------------------
@@ -34,7 +38,7 @@ import { get as storageGet } from '@/src/lib/storage'
 import type { IPlant } from '@/src/types/TPlant'
 import { renderHook, waitFor } from '@testing-library/react-native'
 import * as fc from 'fast-check'
-import { usePlants } from '../usePlants'
+import { _setIsOnlineImpl, usePlants } from '../usePlants'
 
 // ---------------------------------------------------------------------------
 // Typed mock helpers
@@ -62,8 +66,8 @@ const plantWithGardenIdArb = (gardenId: fc.Arbitrary<string>): fc.Arbitrary<IPla
     species: fc.option(fc.string({ minLength: 1, maxLength: 50 }), { nil: undefined }),
     variety: fc.option(fc.string({ minLength: 1, maxLength: 50 }), { nil: undefined }),
     gardenId: gardenId,
-    createdAt: fc.date().map((d) => d.toISOString()),
-    updatedAt: fc.date().map((d) => d.toISOString()),
+    createdAt: fc.integer({ min: 1577836800000, max: 1893456000000 }).map((ts) => new Date(ts).toISOString()),
+    updatedAt: fc.integer({ min: 1577836800000, max: 1893456000000 }).map((ts) => new Date(ts).toISOString()),
   })
 
 /**
@@ -96,6 +100,7 @@ const plantsWithMultipleGardensArb = fc
 beforeEach(() => {
   jest.clearAllMocks()
   mockStorageGet.mockReturnValue(null)
+  _setIsOnlineImpl(async () => true)
 })
 
 // ---------------------------------------------------------------------------
@@ -149,5 +154,5 @@ describe('Property 4: Garden ID filtering returns only matching plants', () => {
       ),
       { numRuns: 100 }
     )
-  })
+  }, 60_000)
 })

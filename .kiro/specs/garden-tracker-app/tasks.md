@@ -40,7 +40,7 @@ Implement the Garden Tracker App as a React Native (Expo) application using Type
     - **Property 10: Data Serialization Round-Trip** — for any valid `Plant`, `Garden`, `CalendarEvent`, or `Photo`, `JSON.parse(JSON.stringify(obj))` produces a structurally equivalent object
     - **Validates: Requirements 10.1, 10.2**
 
-- [ ] 3. Checkpoint — Ensure all validation tests pass
+- [x] 3. Checkpoint — Ensure all validation tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 4. AWS Amplify auth and API client setup
@@ -104,28 +104,28 @@ Implement the Garden Tracker App as a React Native (Expo) application using Type
     - **Property 13: Hook Error Isolation** — any async error in a hook sets `error` state and does not propagate an unhandled exception; other state values remain accessible
     - **Validates: Requirements 9.3**
 
-- [ ] 7. Checkpoint — Ensure all hook tests pass
+- [x] 7. Checkpoint — Ensure all hook tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 8. Garden grid logic
-  - [ ] 8.1 Implement `screenCoordsToCellCoords` utility in `src/utils/grid.ts`
+- [x] 8. Garden grid logic
+  - [x] 8.1 Implement `screenCoordsToCellCoords` utility in `src/utils/grid.ts`
     - Convert absolute screen coordinates to `{ row, col }` given grid origin and cell size
     - Return `null` for coordinates outside grid bounds
     - _Requirements: 3.5_
 
-  - [ ] 8.2 Implement `useGardenGrid` hook in `src/hooks/useGardenGrid.ts`
+  - [x] 8.2 Implement `useGardenGrid` hook in `src/hooks/useGardenGrid.ts`
     - Manage `cells: Record<string, CellState>`, `activeTool: DrawingTool`
     - Implement `handleCellChange(row, col, state)` applying the Touch Drawing Algorithm from the design
     - Implement `clearGrid()` and `exportGridSnapshot()` returning a base64 PNG via `react-native-skia`
     - Validate `plantId` references against the current plants collection before placement
     - _Requirements: 3.2, 3.3, 3.4, 3.5, 3.6, 3.8, 3.9_
 
-  - [ ]\* 8.3 Write property tests for grid drawing tool invariants
+  - [x] 8.3 Write property tests for grid drawing tool invariants
     - **Property 11: Grid Drawing Tool Invariants** — `draw` sets `filled: true`; `erase` removes the key; `place_plant` sets `filled: true` with `plantId`; all other cells unchanged
     - **Property 12: Out-of-Bounds Touch Invariant** — touches outside grid bounds leave the cell map unchanged
     - **Validates: Requirements 3.2, 3.3, 3.4, 3.5**
 
-  - [ ]\* 8.4 Write property tests for grid cell count invariant
+  - [x] 8.4 Write property tests for grid cell count invariant
     - **Property 7: Grid Cell Count Invariant** — for any valid `(widthInches, heightInches)`, the rendered grid contains exactly `(widthInches × 4) × (heightInches × 4)` cells, each rendered exactly once
     - **Validates: Requirements 3.1, 3.7**
 
@@ -143,13 +143,14 @@ Implement the Garden Tracker App as a React Native (Expo) application using Type
     - On location permission denied, emit event for zip code fallback prompt
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9_
 
-  - [ ]\* 9.2 Write property tests for weather cache freshness
+  - [x] 9.2 Write property tests for weather cache freshness
     - **Property 6: Weather Cache Freshness** — while cached entry is < 10 min old, no new API call is made; when ≥ 10 min old, a background refresh is triggered
     - **Validates: Requirements 6.4, 6.5, 6.6**
 
-- [ ] 10. Photo hook
-  - [ ] 10.1 Implement `usePhotos` hook in `src/hooks/usePhotos.ts`
+- [x] 10. Photo hook
+  - [x] 10.1 Implement `usePhotos` hook in `src/hooks/usePhotos.ts`
     - Accept `{ gardenId?, plantId? }` context
+    - Use Expo 55 expo-file-system, don't use the legacy format.
     - Implement `capturePhoto()`: request camera permission, open camera via `expo-camera`, store locally with `expo-file-system`
     - Implement `pickFromGallery()`: request media library permission, open picker via `expo-image-picker`, store locally
     - Implement upload flow: request presigned URL → PUT to S3 → persist metadata to DynamoDB
@@ -157,32 +158,32 @@ Implement the Garden Tracker App as a React Native (Expo) application using Type
     - Implement `deletePhoto(photoId)`: remove from list, delete S3 object, delete DynamoDB record
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8_
 
-  - [ ]\* 10.2 Write property tests for photo upload atomicity
+  - [x] 10.2 Write property tests for photo upload atomicity
     - **Property 4: Photo Upload Atomicity** — if presigned URL request fails or S3 PUT returns non-200, no DynamoDB record is created; photo remains local-only with `s3Key` unset
     - **Validates: Requirements 5.6, 5.7, 9.5**
 
-- [ ] 11. Checkpoint — Ensure all hook and utility tests pass
+- [x] 11. Checkpoint — Ensure all hook and utility tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 12. Shared UI components
-  - [ ] 12.1 Implement `FormModal` component in `src/components/FormModal.tsx`
+- [x] 12. Shared UI components
+  - [x] 12.1 Implement `FormModal` component in `src/components/FormModal.tsx`
     - Animate in/out as a bottom sheet using `react-native-reanimated`
     - Render consistent header with title and close button; handle keyboard avoidance
     - _Requirements: 2.1, 4.1_
 
-  - [ ] 12.2 Implement `GardenGrid` component in `src/components/GardenGrid.tsx`
+  - [x] 12.2 Implement `GardenGrid` component in `src/components/GardenGrid.tsx`
     - Render scrollable canvas using `react-native-skia` at 1/4" cell resolution
     - Handle pan gesture via `react-native-gesture-handler` for multi-cell drawing
     - Highlight cells with `plantId`; emit `onCellChange` for each modified cell
     - Accept `readOnly` prop for preview mode
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.7_
 
-  - [ ] 12.3 Implement `DrawingToolbar` component in `src/components/DrawingToolbar.tsx`
+  - [x] 12.3 Implement `DrawingToolbar` component in `src/components/DrawingToolbar.tsx`
     - Render tool buttons for `draw`, `erase`, `place_plant`, `select`
     - Highlight active tool; call `onToolChange` on press
     - _Requirements: 3.2, 3.3, 3.4_
 
-  - [ ] 12.4 Implement `PlantCard` component in `src/components/PlantCard.tsx`
+  - [x] 12.4 Implement `PlantCard` component in `src/components/PlantCard.tsx`
     - Display plant name, species, variety
     - Show thumbnail of most recent photo when available (no thumbnail when no photos)
     - Provide edit and delete action buttons
@@ -192,17 +193,17 @@ Implement the Garden Tracker App as a React Native (Expo) application using Type
     - **Property 15: PlantCard Photo Display** — plants with ≥1 photo render a thumbnail from the most recent photo; plants with no photos render no thumbnail
     - **Validates: Requirements 5.9**
 
-  - [ ] 12.6 Implement `GardenCard` component in `src/components/GardenCard.tsx`
+  - [x] 12.6 Implement `GardenCard` component in `src/components/GardenCard.tsx`
     - Display garden name, type, size; navigate to detail on press; provide edit and delete actions
     - _Requirements: 2.1_
 
-  - [ ] 12.7 Implement `PhotoPicker` component in `src/components/PhotoPicker.tsx`
+  - [x] 12.7 Implement `PhotoPicker` component in `src/components/PhotoPicker.tsx`
     - Present action sheet with "Take Photo" and "Choose from Gallery" options
     - Delegate to `usePhotos` for permission requests and image selection
     - Return local URI via `onImageSelected` callback
     - _Requirements: 5.1, 5.2_
 
-  - [ ] 12.8 Implement `WeatherWidget` component in `src/components/WeatherWidget.tsx`
+  - [x] 12.8 Implement `WeatherWidget` component in `src/components/WeatherWidget.tsx`
     - Invoke `useWeather` hook; render temperature, condition description, and weather icon
     - Show loading skeleton and error state; support `compact` prop
     - _Requirements: 6.3, 6.8_
@@ -211,75 +212,75 @@ Implement the Garden Tracker App as a React Native (Expo) application using Type
     - **Property 16: Weather Widget Required Fields** — for any successful `WeatherResponse`, the widget renders temperature, condition description, and weather icon; no required field is silently omitted
     - **Validates: Requirements 6.3**
 
-  - [ ] 12.10 Implement `CalendarView` component in `src/components/CalendarView.tsx`
+  - [x] 12.10 Implement `CalendarView` component in `src/components/CalendarView.tsx`
     - Render monthly grid with event dots using `react-native-calendars`
     - Support swipe navigation between months; highlight today; call `onDayPress` and `onEventPress`
     - _Requirements: 4.1, 4.2_
 
-  - [ ] 12.11 Implement `OfflineBanner` component in `src/components/OfflineBanner.tsx`
+  - [x] 12.11 Implement `OfflineBanner` component in `src/components/OfflineBanner.tsx`
     - Display a persistent banner when the device has no network connectivity
     - Use `@react-native-community/netinfo` or equivalent to detect connectivity
     - _Requirements: 8.4_
 
-- [ ] 13. Checkpoint — Ensure all component tests pass
+- [x] 13. Checkpoint — Ensure all component tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 14. Screens and navigation
-  - [ ] 14.1 Implement authentication screens in `app/(auth)/`
+- [x] 14. Screens and navigation
+  - [x] 14.1 Implement authentication screens in `app/(auth)/`
     - Create `sign-in.tsx` with Cognito sign-in form using `aws-amplify`
     - Create `_layout.tsx` to redirect authenticated users away from auth screens
     - _Requirements: 7.1, 7.3_
 
-  - [ ] 14.2 Implement root layout and tab navigation in `app/_layout.tsx` and `app/(tabs)/_layout.tsx`
+  - [x] 14.2 Implement root layout and tab navigation in `app/_layout.tsx` and `app/(drawer)/_layout.tsx`
     - Protect all tab routes behind Cognito auth check; redirect unauthenticated users to sign-in
     - Add `OfflineBanner` to root layout so it appears on all screens
     - _Requirements: 7.1, 8.4_
 
-  - [ ] 14.3 Implement Plants screen in `app/(tabs)/plants.tsx`
+  - [x] 14.3 Implement Plants screen in `app/(drawer)/plants.tsx`
     - Use `usePlants` hook and `@shopify/flash-list` to render `PlantCard` list
     - Add FAB to open `FormModal` for plant creation; support edit and delete via `PlantCard` actions
     - Inline validation errors from `validatePlant` displayed in the form
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9_
 
-  - [ ] 14.4 Implement Gardens screen in `app/(tabs)/gardens.tsx`
+  - [x] 14.4 Implement Gardens screen in `app/(drawer)/gardens.tsx`
     - Use `useGardens` hook and `@shopify/flash-list` to render `GardenCard` list
     - Add FAB to open `FormModal` for garden creation with dimension inputs
     - Inline validation errors from `validateGarden` displayed in the form
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8_
 
-  - [ ] 14.5 Implement Garden Detail screen in `app/gardens/[id].tsx`
+  - [x] 14.5 Implement Garden Detail screen in `app/gardens/[id].tsx`
     - Render `GardenGrid` with `useGardenGrid` hook loaded from persisted cell state
     - Render `DrawingToolbar`; save grid state on change via `useGardens.updateGarden`
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.8, 3.9_
 
-  - [ ] 14.6 Implement Plant Detail screen in `app/plants/[id].tsx`
+  - [x] 14.6 Implement Plant Detail screen in `app/plants/[id].tsx`
     - Render `PlantCard`, `CalendarView` (via `useCalendar(plantId)`), and photo gallery (via `usePhotos`)
     - Provide "Add Event" action opening `FormModal` for event creation
     - Provide `PhotoPicker` for adding photos
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2, 5.8, 5.9_
 
-  - [ ] 14.7 Implement Dashboard screen in `app/(tabs)/index.tsx`
+  - [x] 14.7 Implement Dashboard screen in `app/(drawer)/index.tsx`
     - Render `WeatherWidget` (device location or zip code)
     - Show summary counts for gardens and plants
     - Prompt for zip code if location permission denied; save preference to MMKV
     - _Requirements: 6.1, 6.2, 6.9_
 
-  - [ ] 14.8 Implement Settings / Profile screen in `app/(tabs)/settings.tsx`
+  - [x] 14.8 Implement Settings / Profile screen in `app/(drawer)/settings.tsx`
     - Provide sign-out button that calls `signOut()` from `src/lib/auth.ts`
     - _Requirements: 7.5_
 
 - [ ] 15. Error handling and resilience wiring
-  - [ ] 15.1 Implement global error toast in `src/components/ErrorToast.tsx`
+  - [~] 15.1 Implement global error toast in `src/components/ErrorToast.tsx`
     - Display error toast with retry action when a hook's `error` state is set for 5xx Lambda errors
     - _Requirements: 9.1_
 
-  - [ ] 15.2 Implement exponential backoff retry in `src/lib/apiClient.ts`
+  - [~] 15.2 Implement exponential backoff retry in `src/lib/apiClient.ts`
     - Wrap API calls with retry logic: retry on 5xx and DynamoDB throttle (429) responses using exponential backoff
     - On network timeout, fall back to cached local data and set a status indicator
     - _Requirements: 9.2, 8.5, 8.6_
 
 - [ ] 16. Integration wiring and MSW integration tests
-  - [ ] 16.1 Set up MSW handlers in `src/__tests__/mocks/handlers.ts`
+  - [~] 16.1 Set up MSW handlers in `src/__tests__/mocks/handlers.ts`
     - Mock all API Gateway routes: `/gardens`, `/plants`, `/calendar`, `/photos`, `/photos/presign`, `/weather`
     - _Requirements: 2.1, 1.1, 4.1, 5.4, 6.1_
 
@@ -295,7 +296,7 @@ Implement the Garden Tracker App as a React Native (Expo) application using Type
     - Test full upload flow: presigned URL request → S3 PUT → DynamoDB metadata persist, and failure paths
     - _Requirements: 5.4, 5.5, 5.6, 5.7_
 
-- [ ] 17. Final checkpoint — Ensure all tests pass
+- [~] 17. Final checkpoint — Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

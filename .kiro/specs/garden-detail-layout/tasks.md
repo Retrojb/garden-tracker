@@ -82,7 +82,7 @@ Build the garden detail screen at `app/gardens/[id].tsx` with a heading card (ga
     - Use named export and function signature: `const EmptyState = ({ message, onAdd, className }: IEmptyStateProps) => {}; export { EmptyState };`
     - _Requirements: 5.1, 5.2_
 
-  - [ ]* 4.5 Write unit tests for PlantRow component
+  - [x] 4.5 Write unit tests for PlantRow component
     - Test flex-wrap layout className is applied
     - Test Card renders with `variant="compact"`
     - Test responsive classes are present

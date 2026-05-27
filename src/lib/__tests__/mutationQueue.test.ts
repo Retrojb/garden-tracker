@@ -17,7 +17,7 @@
 
 type Row = Record<string, unknown>
 
-class InMemoryDb {
+class MockInMemoryDb {
   private tables: Record<string, Row[]> = {}
 
   execSync(sql: string): void {
@@ -43,9 +43,23 @@ class InMemoryDb {
       const colMatch = sql.match(/\(([^)]+)\)\s*VALUES/i)
       if (!colMatch) return
       const cols = colMatch[1].split(',').map((c) => c.trim())
+
+      // Extract the VALUES clause to handle literal values vs placeholders
+      const valuesMatch = sql.match(/VALUES\s*\(([^)]+)\)/i)
+      if (!valuesMatch) return
+      const valueParts = valuesMatch[1].split(',').map((v) => v.trim())
+
       const row: Row = {}
+      let paramIdx = 0
       cols.forEach((col, i) => {
-        row[col] = params[i]
+        if (valueParts[i] === '?') {
+          row[col] = params[paramIdx++]
+        } else {
+          // Literal value — parse it
+          const literal = valueParts[i]
+          const numVal = Number(literal)
+          row[col] = isNaN(numVal) ? literal.replace(/'/g, '') : numVal
+        }
       })
       if (!this.tables[tableName]) this.tables[tableName] = []
       this.tables[tableName].push(row)
@@ -102,11 +116,11 @@ class InMemoryDb {
   }
 }
 
-let mockDbInstance: InMemoryDb
+let mockDbInstance: MockInMemoryDb
 
 jest.mock('expo-sqlite', () => ({
   openDatabaseSync: jest.fn(() => {
-    mockDbInstance = new InMemoryDb()
+    mockDbInstance = new MockInMemoryDb()
     return mockDbInstance
   }),
 }))
@@ -135,7 +149,7 @@ beforeEach(() => {
     'expo-sqlite'
   )
   sqlite.openDatabaseSync.mockImplementation(() => {
-    mockDbInstance = new InMemoryDb()
+    mockDbInstance = new MockInMemoryDb()
     return mockDbInstance
   })
   // Reset the module-level singleton inside mutationQueue.ts
@@ -152,7 +166,7 @@ describe('mutationQueue', () => {
   // -------------------------------------------------------------------------
   it('enqueue adds a mutation to the SQLite queue', async () => {
     // Re-import after module reset so the singleton is fresh
-    const { enqueue: enq, dequeue: deq } = await import('../mutationQueue')
+    const { enqueue: enq, dequeue: deq } = require('../mutationQueue')
 
     await enq({
       type: 'create',
@@ -174,7 +188,7 @@ describe('mutationQueue', () => {
   // 2. dequeue returns and removes the oldest mutation
   // -------------------------------------------------------------------------
   it('dequeue returns the oldest mutation and removes it from the queue', async () => {
-    const { enqueue: enq, dequeue: deq } = await import('../mutationQueue')
+    const { enqueue: enq, dequeue: deq } = require('../mutationQueue')
 
     // Enqueue two mutations with a small delay to ensure ordering
     await enq({
@@ -203,7 +217,7 @@ describe('mutationQueue', () => {
   // 3. dequeue returns null when the queue is empty
   // -------------------------------------------------------------------------
   it('dequeue returns null when the queue is empty', async () => {
-    const { dequeue: deq } = await import('../mutationQueue')
+    const { dequeue: deq } = require('../mutationQueue')
 
     const result = await deq()
     expect(result).toBeNull()
@@ -213,7 +227,7 @@ describe('mutationQueue', () => {
   // 4. flushQueue calls apiClient for each mutation and removes on success
   // -------------------------------------------------------------------------
   it('flushQueue calls apiClient.request for each mutation and removes them on success', async () => {
-    const { enqueue: enq, flushQueue: flush } = await import('../mutationQueue')
+    const { enqueue: enq, flushQueue: flush, dequeue: deq } = require('../mutationQueue')
 
     await enq({
       type: 'create',
@@ -232,7 +246,6 @@ describe('mutationQueue', () => {
     expect(mockRequest).toHaveBeenCalledWith('DELETE', '/plants/42', null)
 
     // Queue should be empty after successful flush
-    const { dequeue: deq } = await import('../mutationQueue')
     const remaining = await deq()
     expect(remaining).toBeNull()
   })
@@ -241,14 +254,11 @@ describe('mutationQueue', () => {
   // 5. flushQueue re-enqueues with incremented retryCount on failure
   // -------------------------------------------------------------------------
   it('flushQueue re-enqueues the mutation with incremented retryCount when apiClient throws', async () => {
-    // Override sleep to avoid real delays in tests
-    jest.useFakeTimers()
-
     const {
       enqueue: enq,
       flushQueue: flush,
       dequeue: deq,
-    } = await import('../mutationQueue')
+    } = require('../mutationQueue')
 
     await enq({
       type: 'update',
@@ -258,10 +268,16 @@ describe('mutationQueue', () => {
 
     const mockRequest = jest.fn().mockRejectedValue(new Error('Network error'))
 
-    // Run flush — the sleep inside will be controlled by fake timers
+    // Use fake timers to control the backoff delay
+    jest.useFakeTimers()
+
+    // Start flush — it will reject the request then sleep for backoff
     const flushPromise = flush({ request: mockRequest })
-    // Advance timers past the backoff delay (base 1 s for retryCount=0)
-    jest.advanceTimersByTime(2_000)
+
+    // We need to let the microtask queue drain so flush reaches the sleep call
+    // then advance timers past the backoff delay
+    await jest.advanceTimersByTimeAsync(2_000)
+
     await flushPromise
 
     jest.useRealTimers()

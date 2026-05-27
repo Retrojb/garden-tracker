@@ -15,19 +15,17 @@
 // Mocks — declared before any imports
 // ---------------------------------------------------------------------------
 
-const mockConfigure = jest.fn()
-const mockFetchAuthSession = jest.fn()
-const mockAmplifySignOut = jest.fn()
-
 jest.mock('aws-amplify', () => ({
+  __esModule: true,
   Amplify: {
-    configure: mockConfigure,
+    configure: jest.fn(),
   },
 }))
 
 jest.mock('aws-amplify/auth', () => ({
-  fetchAuthSession: (...args: unknown[]) => mockFetchAuthSession(...args),
-  signOut: (...args: unknown[]) => mockAmplifySignOut(...args),
+  __esModule: true,
+  fetchAuthSession: jest.fn(),
+  signOut: jest.fn(),
 }))
 
 // ---------------------------------------------------------------------------
@@ -35,11 +33,18 @@ jest.mock('aws-amplify/auth', () => ({
 // ---------------------------------------------------------------------------
 
 import {
-    amplifyConfig,
-    configureAmplify,
-    getAccessToken,
-    signOut,
+  amplifyConfig,
+  configureAmplify,
+  getAccessToken,
+  signOut,
 } from '../amplify'
+
+// Access mock functions after import
+const { Amplify } = jest.requireMock<{ Amplify: { configure: jest.Mock } }>('aws-amplify')
+const mockConfigure = Amplify.configure as jest.Mock
+
+const { fetchAuthSession: mockFetchAuthSession, signOut: mockAmplifySignOut } =
+  jest.requireMock<{ fetchAuthSession: jest.Mock; signOut: jest.Mock }>('aws-amplify/auth')
 
 // ---------------------------------------------------------------------------
 // Tests

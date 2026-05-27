@@ -331,20 +331,21 @@ describe('usePlants', () => {
       expect(result.current.isLoading).toBe(false)
     })
 
+    const updatePayload: IUpdatePlantPayload = { name: 'Thai Basil' }
     let updated: IPlant | undefined
     await act(async () => {
-      updated = await result.current.updatePlant(PLANT_A.id, UPDATE_PAYLOAD)
+      updated = await result.current.updatePlant(PLANT_B.id, updatePayload)
     })
 
     expect(mockApiPut).not.toHaveBeenCalled()
     expect(mockEnqueue).toHaveBeenCalledWith({
       type: 'update',
-      resource: `/plants/${PLANT_A.id}`,
-      payload: UPDATE_PAYLOAD,
+      resource: `/plants/${PLANT_B.id}`,
+      payload: updatePayload,
     })
-    expect(updated?.name).toBe('Cherry Tomato')
-    const inState = result.current.plants.find((p) => p.id === PLANT_A.id)
-    expect(inState?.name).toBe('Cherry Tomato')
+    expect(updated?.name).toBe('Thai Basil')
+    const inState = result.current.plants.find((p) => p.id === PLANT_B.id)
+    expect(inState?.name).toBe('Thai Basil')
   })
 
   // -------------------------------------------------------------------------

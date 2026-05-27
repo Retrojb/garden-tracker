@@ -7,7 +7,7 @@ const VALID_VARIANTS: CardVariant[] = ['compact', 'basic', 'detailed']
 
 const cardStyle = tv({
   slots: {
-    base: 'flex-1 m-2 rounded-2xl bg-slate-300 border-4 border-indigo-200 border-t-indigo-500 outline-solid outline-offset-2 border-b-indigo-300',
+    base: 'flex-1 m-2 rounded-2xl bg-mauve-300 border-4 border-indigo-200 shadow-md',
     header: 'flex flex-col pb-2 border-b border-gray-100',
     title: 'text-base font-semibold text-gray-900',
     subtitle: 'text-sm text-gray-500 mt-0.5',

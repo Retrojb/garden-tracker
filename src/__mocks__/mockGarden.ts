@@ -13,6 +13,8 @@ const MOCK_GARDENS: IGarden[] = [
     dimensions: {
       widthInches: 48,
       heightInches: 96,
+      lengthInches: 48
+
     },
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -25,6 +27,8 @@ const MOCK_GARDENS: IGarden[] = [
     dimensions: {
       widthInches: 48,
       heightInches: 96,
+      lengthInches: 48
+
     },
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -37,6 +41,8 @@ const MOCK_GARDENS: IGarden[] = [
     dimensions: {
       widthInches: 48,
       heightInches: 96,
+      lengthInches: 48
+
     },
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -49,6 +55,7 @@ const MOCK_GARDENS: IGarden[] = [
     dimensions: {
       widthInches: 48,
       heightInches: 96,
+      lengthInches: 48
     },
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

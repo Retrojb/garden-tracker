@@ -37,9 +37,13 @@ jest.mock('@/src/lib/apiClient', () => ({
 }))
 
 // react-native-mmkv is already mapped to the in-memory mock via jest.config.js
+// but we need to explicitly reference it for the hook's module-level initialization
+jest.mock('react-native-mmkv', () => {
+  return jest.requireActual('@/src/__mocks__/react-native-mmkv')
+})
 
-import type { WeatherResponse } from '@/src/index'
 import { apiClient } from '@/src/lib/apiClient'
+import type { IWeatherResponse as WeatherResponse } from '@/src/types/TWeather'
 import * as Location from 'expo-location'
 import { locationPermissionDenied, useWeather } from '../useWeather'
 
@@ -130,11 +134,12 @@ describe('useWeather', () => {
     const { result } = renderHook(() => useWeather({ zipCode: '90210' }))
 
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
+      expect(result.current.weather).not.toBeNull()
     })
 
     expect(result.current.weather).toEqual(MOCK_WEATHER)
     expect(result.current.error).toBeNull()
+    expect(result.current.isLoading).toBe(false)
     expect(mockApiGet).not.toHaveBeenCalled()
   })
 
@@ -329,7 +334,7 @@ describe('useWeather', () => {
     const { result } = renderHook(() => useWeather({ zipCode: '11111' }))
 
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
+      expect(result.current.weather).not.toBeNull()
     })
 
     expect(result.current.weather?.temperatureF).toBe(72)
@@ -345,10 +350,9 @@ describe('useWeather', () => {
     })
 
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
+      expect(result.current.weather?.temperatureF).toBe(99)
     })
 
     expect(mockApiGet).toHaveBeenCalledTimes(2)
-    expect(result.current.weather?.temperatureF).toBe(99)
   })
 })

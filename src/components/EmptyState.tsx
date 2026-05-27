@@ -10,7 +10,7 @@ const EmptyState = ({ message, onAdd, className }: IEmptyStateProps) => {
       {onAdd && (
         <Pressable
           onPress={onAdd}
-          className="bg-indigo-500 px-4 py-2 rounded-lg"
+          className="bg-mauve-500 px-4 py-2 rounded-lg"
         >
           <Text className="text-white font-semibold">Add Plant</Text>
         </Pressable>

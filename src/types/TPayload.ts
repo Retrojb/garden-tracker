@@ -4,6 +4,7 @@
 
 import { TEventType } from './TCalendar'
 import { IGardenDimensions, TGardenType } from './TGarden'
+import { ICellState } from './TGardenGrid'
 
 interface ICreateGardenPayload {
   name: string
@@ -15,6 +16,7 @@ interface IUpdateGardenPayload {
   name?: string
   type?: TGardenType
   dimensions?: IGardenDimensions
+  cells?: Record<string, ICellState>
 }
 
 interface ICreatePlantPayload {
@@ -49,5 +51,6 @@ export type {
   ICreatePlantPayload,
   IUpdateEventPayload,
   IUpdateGardenPayload,
-  IUpdatePlantPayload,
+  IUpdatePlantPayload
 }
+

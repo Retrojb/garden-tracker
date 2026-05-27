@@ -2,6 +2,8 @@
 // Garden
 // ---------------------------------------------------------------------------
 
+import type { ICellState } from './TGardenGrid'
+
 type TGardenType =
   | 'raised_bed'
   | 'in_ground'
@@ -29,6 +31,8 @@ interface IGarden {
   size: string
   /** Precise dimensions for grid rendering */
   dimensions: IGardenDimensions
+  /** Persisted grid cell state (sparse map) */
+  cells?: Record<string, ICellState>
   /** ISO 8601 creation timestamp */
   createdAt: string
   /** ISO 8601 last-updated timestamp */

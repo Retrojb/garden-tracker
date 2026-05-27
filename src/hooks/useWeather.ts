@@ -18,10 +18,10 @@
 
 import * as Location from 'expo-location'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { MMKV } from 'react-native-mmkv'
 
-import type { WeatherOptions, WeatherResponse } from '@/src/index'
 import { apiClient } from '@/src/lib/apiClient'
-import { MMKV } from '../__mocks__/react-native-mmkv'
+import { IWeatherOptions, IWeatherResponse } from '../types/TWeather'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -41,7 +41,7 @@ const storage = new MMKV()
 // ---------------------------------------------------------------------------
 
 interface WeatherCacheEntry {
-  data: WeatherResponse
+  data: IWeatherResponse
   timestamp: number
 }
 
@@ -58,7 +58,7 @@ const readCache = (key: string): WeatherCacheEntry | null => {
   }
 }
 
-const writeCache = (key: string, data: WeatherResponse): void => {
+const writeCache = (key: string, data: IWeatherResponse): void => {
   const entry: WeatherCacheEntry = { data, timestamp: Date.now() }
   storage.set(key, JSON.stringify(entry))
 }
@@ -103,7 +103,7 @@ export const locationPermissionDenied = {
 // ---------------------------------------------------------------------------
 
 export interface UseWeatherResult {
-  weather: WeatherResponse | null
+  weather: IWeatherResponse | null
   isLoading: boolean
   error: Error | null
   refetch: () => void
@@ -114,10 +114,10 @@ export interface UseWeatherResult {
  *
  * @param options - `zipCode` or `useDeviceLocation` (at least one required)
  */
-const useWeather = (options: WeatherOptions): UseWeatherResult => {
+const useWeather = (options: IWeatherOptions): UseWeatherResult => {
   const { zipCode, useDeviceLocation } = options
 
-  const [weather, setWeather] = useState<WeatherResponse | null>(null)
+  const [weather, setWeather] = useState<IWeatherResponse | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<Error | null>(null)
 
@@ -179,8 +179,8 @@ const useWeather = (options: WeatherOptions): UseWeatherResult => {
    * Throws on failure so callers can handle the error.
    */
   const fetchFromApi = useCallback(
-    async (query: string, cacheKey: string): Promise<WeatherResponse> => {
-      const response = await apiClient.get<WeatherResponse>(`/weather?${query}`)
+    async (query: string, cacheKey: string): Promise<IWeatherResponse> => {
+      const response = await apiClient.get<IWeatherResponse>(`/weather?${query}`)
       writeCache(cacheKey, response.data)
       return response.data
     },

@@ -149,15 +149,15 @@ Implement a unified, accessible `ReusableInput` component for the Garden Tracker
 - [~] 6. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Integration and wiring
-  - [~] 7.1 Wire component exports and verify cross-platform consistency
+- [x] 7. Integration and wiring
+  - [x] 7.1 Wire component exports and verify cross-platform consistency
     - Ensure named export from `src/components/ReusableInput.tsx`
     - Verify component uses no `Platform.OS` checks or platform-specific props
     - Verify no inline `style` prop objects for appearance
     - Confirm `onFocus` and `onBlur` callbacks are forwarded to TextInput
     - _Requirements: 8.1, 8.2, 8.3, 9.1_
 
-  - [ ]* 7.2 Write unit tests for ReusableInput component
+  - [x] 7.2 Write unit tests for ReusableInput component
     - Test text mode renders with correct keyboard type and passes through value
     - Test phone mode displays formatted value and emits raw digits
     - Test password mode renders with secureTextEntry and toggle works

@@ -44,7 +44,7 @@ const styles = tv({
     locationRow: 'flex-row items-center mt-2',
     locationLabel: 'text-sky-200 text-xs mr-1',
     zipInput: 'text-white text-xs border-b border-sky-300 min-w-[60px] pb-0.5',
-    errorText: 'text-red-300 text-xs mt-1',
+    errorText: 'text-red-300 text-xl font-manrope-bold mt-1',
     loadingRow: 'flex-row items-center px-4 py-3',
     loadingText: 'text-sky-100 text-sm ml-2',
   },
@@ -128,7 +128,7 @@ const WeatherHeader = ({ initialZipCode = '' }: WeatherHeaderProps) => {
   // Derived display values
   // ---------------------------------------------------------------------------
 
-  const tempDisplay = weather ? `${Math.round(weather.temperatureF)}°F` : '99°F'
+  const tempDisplay = weather ? `${Math.round(weather.temperatureF)}°F` : '--°F'
   const conditionDisplay = weather?.condition ?? ''
   const locationDisplay = weather?.location ?? committedZip ?? 'Enter zip'
 

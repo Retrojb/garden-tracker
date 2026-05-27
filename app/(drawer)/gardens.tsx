@@ -1,27 +1,48 @@
 /**
  * Gardens screen
  *
- * Lists all gardens from the useGardens hook and provides a FAB to open the
- * GardenFormModal for creating a new garden.
+ * Lists all gardens using FlashList and GardenCard. Provides a FAB to open
+ * a FormModal for creating/editing gardens with inline validation.
  *
- * Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7
+ * Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8
  */
 
+import { FlashList } from '@shopify/flash-list'
+import { useRouter } from 'expo-router'
+import React, { useCallback, useState } from 'react'
+import { ActivityIndicator, Pressable, Text, View } from 'react-native'
+import { tv } from 'tailwind-variants'
+
 import { Fab } from '@/src/components/Fab'
-import { GardenFormModal } from '@/src/components/GardenFormModal'
+import { FormField } from '@/src/components/FormField'
+import { FormModal } from '@/src/components/FormModal'
+import { GardenCard } from '@/src/components/GardenCard'
+import { SubmitButton } from '@/src/components/SubmitButton'
 import { WeatherHeader } from '@/src/features/WeatherHeader'
 import { useGardens } from '@/src/hooks/useGardens'
+import type { IGarden, TGardenType } from '@/src/types/TGarden'
 import type { ICreateGardenPayload } from '@/src/types/TPayload'
-import { useRouter } from 'expo-router'
-import React, { useState } from 'react'
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native'
-import { tv } from 'tailwind-variants'
+import { validateGarden } from '@/src/utils/validation'
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const GARDEN_TYPES: TGardenType[] = [
+  'raised_bed',
+  'in_ground',
+  'container',
+  'greenhouse',
+  'other',
+]
+
+const GARDEN_TYPE_LABELS: Record<TGardenType, string> = {
+  raised_bed: 'Raised Bed',
+  in_ground: 'In Ground',
+  container: 'Container',
+  greenhouse: 'Greenhouse',
+  other: 'Other',
+}
 
 // ---------------------------------------------------------------------------
 // Styles
@@ -30,21 +51,24 @@ import { tv } from 'tailwind-variants'
 const styles = tv({
   slots: {
     container: 'flex-1 bg-white',
-    list: 'flex-1',
-    listContent: 'px-4 pt-3 pb-28',
-    card: 'mb-3 rounded-2xl bg-white border border-gray-200 p-4 shadow-sm',
-    cardName: 'text-base font-semibold text-gray-900',
-    cardMeta: 'text-sm text-gray-500 mt-0.5 capitalize',
-    cardDims: 'text-xs text-gray-400 mt-1',
+    listContent: 'px-2 pt-3 pb-28',
     emptyWrap: 'flex-1 items-center justify-center py-20',
-    emptyText: 'text-gray-400 text-sm mt-2',
     emptyTitle: 'text-gray-600 font-semibold text-base',
+    emptyText: 'text-gray-400 text-sm mt-2',
     errorBanner:
       'mx-4 mt-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3',
     errorText: 'text-sm text-red-600',
     loadingWrap: 'flex-1 items-center justify-center py-20',
-    fab: 'absolute bottom-6 right-6 w-14 h-14 rounded-full bg-green-600 items-center justify-center shadow-lg',
-    fabText: 'text-white text-3xl leading-none',
+    typeRow: 'flex-row flex-wrap gap-2 mb-4',
+    typeChip: 'px-3 py-1.5 rounded-full border border-gray-300 bg-white',
+    typeChipActive: 'border-green-600 bg-green-50',
+    typeChipText: 'text-xs text-gray-600 capitalize',
+    typeChipTextActive: 'text-green-700 font-semibold',
+    typeLabel: 'text-sm font-medium text-gray-700 mb-1',
+    typeError: 'text-xs text-red-500 -mt-2 mb-3',
+    dimLabel: 'text-sm font-medium text-gray-700 mb-1',
+    dimRow: 'flex-row gap-3',
+    dimField: 'flex-1',
   },
 })
 
@@ -54,19 +78,156 @@ const styles = tv({
 
 const GardensScreen = () => {
   const router = useRouter()
-  const { gardens, isLoading, error, createGarden } = useGardens()
-  const [modalVisible, setModalVisible] = useState(false)
+  const {
+    gardens,
+    isLoading,
+    error,
+    createGarden,
+    updateGarden,
+    deleteGarden,
+  } = useGardens()
+
   const s = styles()
 
-  const handleCreate = async (payload: ICreateGardenPayload) => {
-    await createGarden(payload)
-  }
+  // Modal state
+  const [modalVisible, setModalVisible] = useState(false)
+  const [editingGarden, setEditingGarden] = useState<IGarden | null>(null)
 
-  const formatDims = (widthInches: number, heightInches: number) => {
-    const w = (widthInches / 12).toFixed(widthInches % 12 === 0 ? 0 : 1)
-    const h = (heightInches / 12).toFixed(heightInches % 12 === 0 ? 0 : 1)
-    return `${w} × ${h} ft  (${widthInches}" × ${heightInches}")`
-  }
+  // Form state
+  const [name, setName] = useState('')
+  const [type, setType] = useState<TGardenType | ''>('')
+  const [widthInches, setWidthInches] = useState('')
+  const [heightInches, setHeightInches] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // -------------------------------------------------------------------------
+  // Form helpers
+  // -------------------------------------------------------------------------
+
+  const resetForm = useCallback(() => {
+    setName('')
+    setType('')
+    setWidthInches('')
+    setHeightInches('')
+    setFieldErrors({})
+    setIsSubmitting(false)
+    setEditingGarden(null)
+  }, [])
+
+  const openCreateModal = useCallback(() => {
+    resetForm()
+    setModalVisible(true)
+  }, [resetForm])
+
+  const openEditModal = useCallback((garden: IGarden) => {
+    setEditingGarden(garden)
+    setName(garden.name)
+    setType(garden.type)
+    setWidthInches(String(garden.dimensions.widthInches))
+    setHeightInches(String(garden.dimensions.heightInches))
+    setFieldErrors({})
+    setIsSubmitting(false)
+    setModalVisible(true)
+  }, [])
+
+  const handleClose = useCallback(() => {
+    setModalVisible(false)
+    resetForm()
+  }, [resetForm])
+
+  const handleSubmit = useCallback(async () => {
+    const payload: Partial<ICreateGardenPayload> = {
+      name: name.trim() || undefined,
+      type: type || undefined,
+      dimensions:
+        widthInches || heightInches
+          ? {
+            widthInches: parseInt(widthInches, 10) || 0,
+            heightInches: parseInt(heightInches, 10) || 0,
+            lengthInches: parseInt(heightInches, 10) || 0,
+          }
+          : undefined,
+    }
+
+    const result = validateGarden(payload)
+
+    if (!result.valid) {
+      const errs: Record<string, string> = {}
+      result.errors.forEach((e) => {
+        errs[e.field] = e.message
+      })
+      setFieldErrors(errs)
+      return
+    }
+
+    setFieldErrors({})
+    setIsSubmitting(true)
+
+    try {
+      if (editingGarden) {
+        await updateGarden(editingGarden.id, payload as ICreateGardenPayload)
+      } else {
+        await createGarden(payload as ICreateGardenPayload)
+      }
+      setModalVisible(false)
+      resetForm()
+    } catch {
+      // Error is handled by the hook; keep modal open so user can retry
+    } finally {
+      setIsSubmitting(false)
+    }
+  }, [
+    name,
+    type,
+    widthInches,
+    heightInches,
+    editingGarden,
+    createGarden,
+    updateGarden,
+    resetForm,
+  ])
+
+  // -------------------------------------------------------------------------
+  // List handlers
+  // -------------------------------------------------------------------------
+
+  const handleCardPress = useCallback(
+    (gardenId: string) => {
+      router.push(`/gardens/${gardenId}`)
+    },
+    [router]
+  )
+
+  const handleDelete = useCallback(
+    async (gardenId: string) => {
+      await deleteGarden(gardenId)
+    },
+    [deleteGarden]
+  )
+
+  // -------------------------------------------------------------------------
+  // Render
+  // -------------------------------------------------------------------------
+
+  const renderGardenCard = useCallback(
+    ({ item }: { item: IGarden }) => (
+      <GardenCard
+        garden={item}
+        onPress={handleCardPress}
+        onEdit={openEditModal}
+        onDelete={handleDelete}
+      />
+    ),
+    [handleCardPress, openEditModal, handleDelete]
+  )
+
+  const renderEmptyState = () => (
+    <View className={s.emptyWrap()}>
+      <Text className={s.emptyTitle()}>No gardens yet</Text>
+      <Text className={s.emptyText()}>Tap + to add your first garden</Text>
+    </View>
+  )
 
   return (
     <View className={s.container()}>
@@ -84,54 +245,102 @@ const GardensScreen = () => {
         <View className={s.loadingWrap()}>
           <ActivityIndicator color="#4b7c59" />
         </View>
-      ) : gardens.length === 0 ? (
-        <View className={s.emptyWrap()}>
-          <Text className={s.emptyTitle()}>No gardens yet</Text>
-          <Text className={s.emptyText()}>Tap + to add your first garden</Text>
-        </View>
       ) : (
-        <ScrollView
-          className={s.list()}
-          contentContainerClassName={s.listContent()}
+          <FlashList
+            data={gardens}
+            renderItem={renderGardenCard}
+            contentContainerStyle={{ paddingHorizontal: 8, paddingTop: 12, paddingBottom: 112 }}
+            ListEmptyComponent={renderEmptyState}
+            keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-        >
-          {gardens.map((garden) => (
-            <Pressable
-              key={garden.id}
-              className={s.card()}
-              onPress={() => router.push(`/gardens/${garden.id}`)}
-              accessibilityRole="button"
-              accessibilityLabel={`View ${garden.name}`}
-              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-            >
-              <Text className={s.cardName()}>{garden.name}</Text>
-              <Text className={s.cardMeta()}>
-                {garden.type.replace(/_/g, ' ')}
-              </Text>
-              <Text className={s.cardDims()}>
-                {formatDims(
-                  garden.dimensions.widthInches,
-                  garden.dimensions.heightInches
-                )}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
+        />
       )}
 
       {/* FAB */}
       <Fab
         iconName="plus"
-        onPress={() => setModalVisible(true)}
+        onPress={openCreateModal}
         accessibilityLabel="Add garden"
       />
 
-      {/* Create garden modal */}
-      <GardenFormModal
+      {/* Create / Edit garden modal */}
+      <FormModal
         visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onSubmit={handleCreate}
-      />
+        title={editingGarden ? 'Edit Garden' : 'New Garden'}
+        onClose={handleClose}
+      >
+        {/* Name */}
+        <FormField
+          label="Garden Name"
+          value={name}
+          onChangeText={setName}
+          error={fieldErrors.name}
+          required
+          placeholder="e.g. Tomato Bed"
+          maxLength={110}
+          returnKeyType="next"
+        />
+
+        {/* Type */}
+        <Text className={s.typeLabel()}>Garden Type *</Text>
+        <View className={s.typeRow()}>
+          {GARDEN_TYPES.map((t) => (
+            <Pressable
+              key={t}
+              onPress={() => setType(t)}
+              className={`${s.typeChip()} ${type === t ? s.typeChipActive() : ''}`}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: type === t }}
+              accessibilityLabel={GARDEN_TYPE_LABELS[t]}
+            >
+              <Text
+                className={`${s.typeChipText()} ${type === t ? s.typeChipTextActive() : ''}`}
+              >
+                {GARDEN_TYPE_LABELS[t]}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+        {fieldErrors.type ? (
+          <Text className={s.typeError()}>{fieldErrors.type}</Text>
+        ) : null}
+
+        {/* Dimensions */}
+        <Text className={s.dimLabel()}>Dimensions (inches) *</Text>
+        <View className={s.dimRow()}>
+          <View className={s.dimField()}>
+            <FormField
+              label="Width"
+              value={widthInches}
+              onChangeText={setWidthInches}
+              error={fieldErrors['dimensions.widthInches']}
+              placeholder="Width"
+              keyboardType="number-pad"
+              returnKeyType="next"
+            />
+          </View>
+          <View className={s.dimField()}>
+            <FormField
+              label="Height"
+              value={heightInches}
+              onChangeText={setHeightInches}
+              error={fieldErrors['dimensions.heightInches']}
+              placeholder="Height"
+              keyboardType="number-pad"
+              returnKeyType="done"
+              onSubmitEditing={handleSubmit}
+            />
+          </View>
+        </View>
+
+        {/* Submit */}
+        <SubmitButton
+          label={editingGarden ? 'Save Changes' : 'Create Garden'}
+          onPress={handleSubmit}
+          isLoading={isSubmitting}
+          className="mt-4"
+        />
+      </FormModal>
     </View>
   )
 }

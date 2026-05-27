@@ -5,10 +5,17 @@
  * the Node.js test environment. This mock provides an in-memory Map-backed
  * implementation so tests can exercise code that depends on MMKV without
  * native binaries.
+ *
+ * All instances share a single module-level store so that data written by one
+ * instance (e.g. in a test helper) is visible to another (e.g. the hook under
+ * test). This mirrors the real MMKV behaviour where the default instance
+ * accesses the same underlying storage.
  */
 
+const sharedStore = new Map<string, string | number | boolean | Uint8Array>()
+
 export class MMKV {
-  private store = new Map<string, string | number | boolean | Uint8Array>()
+  private store = sharedStore
 
   getString(key: string): string | undefined {
     const value = this.store.get(key)

@@ -1,7 +1,8 @@
+import React from 'react';
 import { Pressable, Text } from 'react-native';
 import { tv } from 'tailwind-variants';
 
-interface IButtonProps {
+interface IButtonProps extends React.ComponentProps<typeof Pressable> {
     label: string;
     variant?: string
 }

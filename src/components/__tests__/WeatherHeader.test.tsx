@@ -26,9 +26,18 @@ jest.mock('@/src/hooks/useWeather', () => ({
 
 // Mock react-native-reanimated to avoid native module issues in tests
 jest.mock('react-native-reanimated', () => {
-  const Reanimated = require('react-native-reanimated/mock')
-  Reanimated.default.call = () => {}
-  return Reanimated
+  const { View } = require('react-native')
+  return {
+    __esModule: true,
+    default: {
+      View: View,
+      call: () => { },
+    },
+    useSharedValue: (init: unknown) => ({ value: init }),
+    useAnimatedStyle: () => ({}),
+    withTiming: (val: unknown) => val,
+    Easing: { linear: 'linear' },
+  }
 })
 
 import { useWeather } from '@/src/hooks/useWeather'
@@ -133,11 +142,11 @@ describe('WeatherHeader', () => {
     expect(screen.getByText('▲')).toBeTruthy()
 
     // Press to collapse
-    fireEvent.press(screen.getByAccessibilityLabel('Collapse weather'))
+    fireEvent.press(screen.getByLabelText('Collapse weather'))
     expect(screen.getByText('▼')).toBeTruthy()
 
     // Press to expand again
-    fireEvent.press(screen.getByAccessibilityLabel('Expand weather'))
+    fireEvent.press(screen.getByLabelText('Expand weather'))
     expect(screen.getByText('▲')).toBeTruthy()
   })
 
@@ -166,7 +175,7 @@ describe('WeatherHeader', () => {
 
     render(<WeatherHeader />)
 
-    expect(screen.getByAccessibilityLabel('Enter zip code')).toBeTruthy()
+    expect(screen.getByLabelText('Enter zip code')).toBeTruthy()
   })
 
   // -------------------------------------------------------------------------
@@ -177,7 +186,7 @@ describe('WeatherHeader', () => {
 
     render(<WeatherHeader />)
 
-    const input = screen.getByAccessibilityLabel('Enter zip code')
+    const input = screen.getByLabelText('Enter zip code')
     fireEvent.changeText(input, '12345')
     fireEvent(input, 'submitEditing')
 

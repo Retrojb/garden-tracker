@@ -33,13 +33,10 @@ jest.mock('expo-router/drawer', () => {
   return { Drawer: MockDrawer }
 })
 
-jest.mock('react-native', () => {
-  const actual = jest.requireActual('react-native')
-  return {
-    ...actual,
-    useWindowDimensions: () => ({ width: 1024, height: 768 }),
-  }
-})
+jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
+  __esModule: true,
+  default: () => ({ width: 1024, height: 768 }),
+}))
 
 jest.mock('@expo/vector-icons/FontAwesome', () => {
   const { Text } = jest.requireActual('react-native')
@@ -48,6 +45,10 @@ jest.mock('@expo/vector-icons/FontAwesome', () => {
   )
   return MockFontAwesome
 })
+
+jest.mock('@/src/components/navigation/CustomDrawerContent', () => ({
+  CustomDrawerContent: () => null,
+}))
 
 // ---------------------------------------------------------------------------
 // Import after mocks
@@ -98,7 +99,7 @@ describe('DrawerLayout', () => {
     const expectedIcons: Record<string, string> = {
       index: 'home',
       plants: 'leaf',
-      gardens: 'code',
+      gardens: 'tree',
       settings: 'cog',
     }
 

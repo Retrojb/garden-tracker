@@ -13,58 +13,56 @@ import * as fc from 'fast-check'
 // Mocks
 // ---------------------------------------------------------------------------
 
-const mockFetchAuthSession = jest.fn()
 jest.mock('aws-amplify/auth', () => ({
-  fetchAuthSession: (...args: unknown[]) => mockFetchAuthSession(...args),
+  fetchAuthSession: jest.fn(),
 }))
 
-const mockAmplifySignOut = jest.fn()
+jest.mock('expo-sqlite', () => ({
+  openDatabaseSync: jest.fn(() => ({
+    execSync: jest.fn(),
+    runSync: jest.fn(),
+    getFirstSync: jest.fn(),
+    getAllSync: jest.fn(() => []),
+  })),
+}))
+
 jest.mock('../amplify', () => ({
-  signOut: () => mockAmplifySignOut(),
+  signOut: jest.fn().mockResolvedValue(undefined),
 }))
 
 /**
- * We need direct access to the MMKV instance to seed data before sign-out.
- * Import the mock class and create a shared instance that mirrors what
- * storage.ts uses internally.
+ * We mock the storage module directly so we can track whether clear() is
+ * called and simulate seeded data via a simple in-memory store.
  */
-const mockMMKVInstance = {
-  store: new Map<string, string>(),
-  getString(key: string): string | undefined {
-    return this.store.get(key)
-  },
-  set(key: string, value: string): void {
-    this.store.set(key, value)
-  },
-  delete(key: string): void {
-    this.store.delete(key)
-  },
-  clearAll(): void {
-    this.store.clear()
-  },
-  contains(key: string): boolean {
-    return this.store.has(key)
-  },
-  getAllKeys(): string[] {
-    return Array.from(this.store.keys())
-  },
-}
+const mockStore = new Map<string, string>()
 
-jest.mock('../../__mocks__/react-native-mmkv', () => ({
-  MMKV: jest.fn(() => mockMMKVInstance),
-}))
-
-let mutationQueueCleared = false
-jest.mock('../mutationQueueClear', () => ({
-  clearMutationQueue: jest.fn(async () => {
-    mutationQueueCleared = true
+jest.mock('../storage', () => ({
+  get: jest.fn((key: string) => {
+    const raw = mockStore.get(key)
+    if (!raw) return null
+    try { return JSON.parse(raw) } catch { return null }
+  }),
+  set: jest.fn((key: string, value: unknown) => {
+    mockStore.set(key, JSON.stringify(value))
+  }),
+  deleteKey: jest.fn((key: string) => {
+    mockStore.delete(key)
+  }),
+  clear: jest.fn(() => {
+    mockStore.clear()
   }),
 }))
 
-const mockRouterReplace = jest.fn()
+let mockMutationQueueCleared = false
+jest.mock('../mutationQueueClear', () => ({
+  clearMutationQueue: jest.fn(async () => {
+    mockMutationQueueCleared = true
+  }),
+}))
+
 jest.mock('expo-router', () => ({
   router: {
-    replace: (...args: unknown[]) => mockRouterReplace(...args),
+    replace: jest.fn(),
   },
 }))
 
@@ -95,8 +93,7 @@ const eventKeyArb = fc
 
 /** Generates a storage key representing cached weather data */
 const weatherKeyArb = fc
-  .string({ minLength: 5, maxLength: 5, unit: 'grapheme' })
-  .filter((s) => /^\d{5}$/.test(s))
+  .integer({ min: 10000, max: 99999 })
   .map((zip) => `weather:${zip}`)
 
 /** Generates an arbitrary MMKV storage key (any user-specific data) */
@@ -146,9 +143,8 @@ const cachedDataArb = fc.array(
 
 beforeEach(() => {
   jest.clearAllMocks()
-  mockMMKVInstance.store.clear()
-  mutationQueueCleared = false
-  mockAmplifySignOut.mockResolvedValue(undefined)
+  mockStore.clear()
+  mockMutationQueueCleared = false
 })
 
 // ---------------------------------------------------------------------------
@@ -157,31 +153,31 @@ beforeEach(() => {
 // ---------------------------------------------------------------------------
 
 describe('Property 17: Sign-Out Cache Clearing', () => {
-  it('for any arbitrary set of cached data, after signOut() completes, ALL MMKV storage is cleared', () => {
-    fc.assert(
+  it('for any arbitrary set of cached data, after signOut() completes, ALL MMKV storage is cleared', async () => {
+    await fc.assert(
       fc.asyncProperty(cachedDataArb, async (cachedEntries) => {
-        // Seed MMKV with arbitrary cached data
+        // Seed the mock store with arbitrary cached data
         for (const [key, value] of cachedEntries) {
-          mockMMKVInstance.set(key, value)
+          mockStore.set(key, value)
         }
 
         // Verify data was seeded (if any entries provided)
         if (cachedEntries.length > 0) {
-          expect(mockMMKVInstance.getAllKeys().length).toBeGreaterThan(0)
+          expect(mockStore.size).toBeGreaterThan(0)
         }
 
         // Execute sign-out
         await signOut()
 
-        // After sign-out, MMKV must be completely empty
-        expect(mockMMKVInstance.getAllKeys()).toHaveLength(0)
+        // After sign-out, storage must be completely empty
+        expect(mockStore.size).toBe(0)
       }),
       { numRuns: 100 }
     )
   })
 
-  it('no user-specific data remains in MMKV after sign-out regardless of data types cached', () => {
-    fc.assert(
+  it('no user-specific data remains in MMKV after sign-out regardless of data types cached', async () => {
+    await fc.assert(
       fc.asyncProperty(
         fc.record({
           plants: fc.array(fc.tuple(plantKeyArb, storageValueArb), { minLength: 0, maxLength: 5 }),
@@ -193,18 +189,17 @@ describe('Property 17: Sign-Out Cache Clearing', () => {
           // Seed all categories of user data
           const allEntries = [...plants, ...gardens, ...events, ...weather]
           for (const [key, value] of allEntries) {
-            mockMMKVInstance.set(key, value)
+            mockStore.set(key, value)
           }
 
           await signOut()
 
           // No keys should remain — no plant, garden, event, or weather data
-          const remainingKeys = mockMMKVInstance.getAllKeys()
-          expect(remainingKeys).toHaveLength(0)
+          expect(mockStore.size).toBe(0)
 
           // Specifically verify no user-specific keys survive
           for (const [key] of allEntries) {
-            expect(mockMMKVInstance.contains(key)).toBe(false)
+            expect(mockStore.has(key)).toBe(false)
           }
         }
       ),
@@ -212,41 +207,41 @@ describe('Property 17: Sign-Out Cache Clearing', () => {
     )
   })
 
-  it('SQLite mutation queue is cleared after signOut() regardless of cached MMKV state', () => {
-    fc.assert(
+  it('SQLite mutation queue is cleared after signOut() regardless of cached MMKV state', async () => {
+    await fc.assert(
       fc.asyncProperty(cachedDataArb, async (cachedEntries) => {
-        // Seed MMKV with arbitrary data
+        // Seed storage with arbitrary data
         for (const [key, value] of cachedEntries) {
-          mockMMKVInstance.set(key, value)
+          mockStore.set(key, value)
         }
-        mutationQueueCleared = false
+        mockMutationQueueCleared = false
 
         await signOut()
 
         // The mutation queue clear must always be called
-        expect(mutationQueueCleared).toBe(true)
+        expect(mockMutationQueueCleared).toBe(true)
       }),
       { numRuns: 100 }
     )
   })
 
-  it('signOut() clears all caches regardless of the volume of cached data', () => {
-    fc.assert(
+  it('signOut() clears all caches regardless of the volume of cached data', async () => {
+    await fc.assert(
       fc.asyncProperty(
         fc.integer({ min: 0, max: 50 }),
         async (entryCount) => {
-          // Seed MMKV with a variable number of entries
+          // Seed storage with a variable number of entries
           for (let i = 0; i < entryCount; i++) {
-            mockMMKVInstance.set(`data:${i}`, JSON.stringify({ index: i, payload: 'x'.repeat(i) }))
+            mockStore.set(`data:${i}`, JSON.stringify({ index: i, payload: 'x'.repeat(i) }))
           }
 
-          expect(mockMMKVInstance.getAllKeys().length).toBe(entryCount)
+          expect(mockStore.size).toBe(entryCount)
 
           await signOut()
 
           // All entries must be cleared regardless of count
-          expect(mockMMKVInstance.getAllKeys()).toHaveLength(0)
-          expect(mutationQueueCleared).toBe(true)
+          expect(mockStore.size).toBe(0)
+          expect(mockMutationQueueCleared).toBe(true)
         }
       ),
       { numRuns: 100 }

@@ -1,15 +1,26 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Redirect } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
 import { useWindowDimensions } from 'react-native';
+
+import { CustomDrawerContent } from '@/src/components/navigation/CustomDrawerContent';
+import { useAuth } from '@/src/features/auth/AuthContext';
 
 const BREAKPOINT = 768;
 
 const DrawerLayout = (): React.ReactElement => {
+  const { status } = useAuth();
   const { width } = useWindowDimensions();
   const isLargeScreen = width > BREAKPOINT;
 
+  // Redirect unauthenticated users to sign-in
+  if (status === 'unauthenticated') {
+    return <Redirect href={'/(auth)/sign-in' as never} />;
+  }
+
   return (
     <Drawer
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         drawerType: isLargeScreen ? 'permanent' : 'front',
         drawerStyle: {

@@ -1,11 +1,10 @@
 /**
- * GardenCarousel
+ * Carousel
  *
- * A horizontally scrollable carousel of garden cards.
- * Each card is pressable and navigates to the garden detail screen.
+ * A generic horizontally scrollable carousel with a title header
+ * and optional "See all" action.
  */
 
-import { useRouter } from 'expo-router'
 import React from 'react'
 import { ScrollView, Text, View } from 'react-native'
 import { tv } from 'tailwind-variants'
@@ -21,8 +20,6 @@ const styles = tv({
     sectionTitle: 'text-lg font-bold text-gray-800',
     seeAll: 'text-sm text-green-600 font-medium',
     scrollContent: 'px-2',
-    cardWrapper: 'w-44',
-    typeLabel: 'text-xs text-gray-500 capitalize mt-1',
     emptyText: 'text-sm text-gray-400 px-4',
   },
 })
@@ -32,50 +29,69 @@ const styles = tv({
 // ---------------------------------------------------------------------------
 
 type ICarouselProps = {
-  children: React.ReactElement;
+  /** Section title displayed above the carousel */
+  title: string
+  /** Content to render inside the horizontal scroll */
+  children: React.ReactNode
+  /** Callback when "See all" is pressed */
   onSeeAll?: () => void
+  /** Accessibility label for the scroll container */
+  accessibilityLabel?: string
+  /** Text shown when children is empty/null */
+  emptyMessage?: string
+  /** Whether the carousel has items to display */
+  isEmpty?: boolean
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-const Carousel = ({ children, onSeeAll }: ICarouselProps) => {
-  const router = useRouter()
+const Carousel = ({
+  title,
+  children,
+  onSeeAll,
+  accessibilityLabel,
+  emptyMessage,
+  isEmpty = false,
+}: ICarouselProps) => {
   const {
     section,
     sectionHeader,
     sectionTitle,
     seeAll,
     scrollContent,
-    cardWrapper,
-    typeLabel,
     emptyText,
   } = styles()
 
   return (
     <View className={section()}>
       <View className={sectionHeader()}>
-        <Text className={sectionTitle()}>My Gardens</Text>
+        <Text className={sectionTitle()}>{title}</Text>
         {onSeeAll && (
           <Text
             className={seeAll()}
             onPress={onSeeAll}
             accessibilityRole="button"
-            accessibilityLabel="See all gardens"
+            accessibilityLabel={`See all ${title.toLowerCase()}`}
           >
             See all
           </Text>
         )}
       </View>
+
+      {isEmpty && emptyMessage ? (
+        <Text className={emptyText()}>{emptyMessage}</Text>
+      ) : (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerClassName={scrollContent()}
-          accessibilityLabel="Gardens carousel"
+            accessibilityLabel={accessibilityLabel ?? `${title} carousel`}
         >
           {children}
         </ScrollView>
+      )}
     </View>
   )
 }

@@ -45,13 +45,13 @@ Add a `variant` prop (`'compact' | 'basic' | 'detailed'`) to the existing Card c
     - Verify backward compatibility: existing props (title, subtitle, children, onPress) work without variant
     - _Requirements: 1.2, 2.1, 2.2, 2.3, 3.1, 3.2, 4.1, 8.1, 8.2_
 
-  - [ ]* 4.2 Write property test for content slot visibility
+  - [x] 4.2 Write property test for content slot visibility
     - **Property 1: Variant controls content slot visibility**
     - For any valid Card props and each variant, verify correct slots are rendered/omitted
     - Use `fast-check` to generate random title, subtitle, and children values
     - **Validates: Requirements 2.1, 2.2, 2.3, 3.1, 3.2, 4.1**
 
-  - [ ]* 4.3 Write property test for invalid variant fallback
+  - [x] 4.3 Write property test for invalid variant fallback
     - **Property 2: Invalid variant falls back to basic**
     - For any string not in `['compact', 'basic', 'detailed']`, verify Card renders with `basic` behavior
     - Use `fast-check` arbitrary strings

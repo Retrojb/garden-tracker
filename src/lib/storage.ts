@@ -7,7 +7,8 @@
  * Requirements: 6.4, 6.5, 8.1
  */
 
-import { MMKV } from '../__mocks__/react-native-mmkv'
+
+import { MMKV } from 'react-native-mmkv'
 import { IWeatherCacheEntry } from '../types/TCache'
 import { IWeatherResponse } from '../types/TWeather'
 

@@ -12,6 +12,7 @@ const MOCK_PLANTS: IPlant[] = [
     variety: 'Cherry',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    gardenId: '1'
   },
   {
     id: '2',
@@ -20,6 +21,7 @@ const MOCK_PLANTS: IPlant[] = [
     variety: 'Sweet',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    gardenId: '2'
   },
   {
     id: '3',
@@ -28,6 +30,7 @@ const MOCK_PLANTS: IPlant[] = [
     variety: 'Bell',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    gardenId: '3'
   },
   {
     id: '4',
@@ -35,6 +38,7 @@ const MOCK_PLANTS: IPlant[] = [
     species: 'Cucurbita pepo',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    gardenId: '4'
   },
 ]
 

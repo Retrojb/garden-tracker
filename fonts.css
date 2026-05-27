@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@260&display=swap');
+
+.manrope-extra-light {
+  font-family: "Manrope", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 200;
+  font-style: normal;
+  src: url('/assets/fonts/Manrope-Extra-Light.ttf') format('truetype')
+}
+
+.manrope-light {
+  font-family: "Manrope", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-style: normal;
+  src: url('/assets/fonts/Manrope-Light.ttf') format('truetype')
+
+}
+
+.manrope-regular {
+  font-family: "Manrope", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  src: url('/assets/fonts/Manrope-Regular.ttf') format('truetype')
+
+}
+
+.manrope-medium {
+  font-family: "Manrope", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+  src: url('/assets/fonts/Manrope-Medium.ttf') format('truetype')
+
+}
+
+.manrope-semi-bold {
+  font-family: "Manrope", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 600;
+  font-style: normal;
+    src: url('/assets/fonts/Manrope-SemiBold.ttf') format('truetype')
+
+}
+.manrope-bold {
+  font-family: "Manrope", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-style: normal;
+  src: url('/assets/fonts/Manrope-Bold.ttf') format('truetype')
+
+}
+
+
+.manrope-extra-bold {
+  font-family: "Manrope", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-style: normal;
+  src: url('/assets/fonts/Manrope-ExtraBold.ttf') format('truetype')
+
+}
