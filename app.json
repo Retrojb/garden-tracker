@@ -1,36 +1,60 @@
-{
-  "expo": {
-    "name": "garden-tracker",
-    "slug": "garden-tracker",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "gardentracker",
-    "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/images/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+import * as pkg from './package.json' with { type: 'json' };
+import type { ConfigContext, ExpoConfig } from '@expo/config';
+
+const BUILD_NUMBER = 421;
+
+export default ({config}: ConfigContext): ExpoConfig => ({
+  ...config,
+    owner: 'retrojb',
+    name: "garden-tracker",
+    slug: "garden-tracker",
+    version: `${pkg.version}`,
+    icon: "./assets/images/icon.png",
+    scheme: "https",
+    userInterfaceStyle: "automatic",
+    splash: {
+      image: "./assets/images/splash-icon.png",
+      resizeMode: "contain",
+      backgroundColor: "#ffffff"
     },
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.gardentracker"
+    ios: {
+      supportsTablet: true,
+      bundleIdentifier: "com.retrojb.gardentracker",
+      buildNumber: `${BUILD_NUMBER}`,
+      privacyManifests: {
+        NSPrivacyAccessedAPITypes: [
+          {
+            NSPrivacyAccessedAPIType: 'NSPrivacyAccessedAPICategoryUserDefaults',
+            NSPrivacyAccessedAPITypeReasons: ['CA92.1']
+          }
+        ]
+      }
     },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.gardentracker"
+    android: {
+      package: 'com.retrojb.gardentracker',
+      predictiveBackGestureEnabled: false,
+      versionCode: BUILD_NUMBER,
     },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+    web: {
+      bundler: "metro",
+      output: "static",
+      favicon: "./assets/images/favicon.png"
     },
-    "plugins": [
-      "expo-font",
+    plugins: [
+      'expo-dev-client',
+      [
+        'expo-build-properties',
+        {
+          android: {
+            compileSdkVersion: 36,
+            targetSdkVersion: 36,
+            buildToolsVersion: '36.0.0'
+          },
+          ios: {
+            deploymentTarget: '26.0'
+          },
+        }
+      ],
       [
         "expo-router",
         {
@@ -60,5 +84,6 @@
     "experiments": {
       "typedRoutes": true
     }
-  }
-}
+})
+  
+
